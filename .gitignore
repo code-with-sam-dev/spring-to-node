@@ -1,0 +1,17 @@
+# Node
+node_modules/
+dist/
+npm-debug.log*
+
+# Java
+target/
+*.class
+
+# Editors and OS
+.idea/
+.vscode/
+.DS_Store
+
+# Environment
+.env
+.env.local

@@ -1,0 +1,15 @@
+# One command brings up both stacks so the viewer can curl them side by side.
+# Standing rule for this channel: the repository must be runnable end to end
+# with docker, not just on the machine it was written on.
+services:
+  spring-boot-api:
+    build: ./spring-boot-api
+    ports:
+      - "8080:8080"
+
+  nestjs-api:
+    build: ./nestjs-api
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
