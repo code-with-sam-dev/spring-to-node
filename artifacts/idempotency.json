@@ -1,0 +1,14 @@
+{
+  "url": "http://localhost:3005",
+  "node": "v22.22.2",
+  "requests": 50,
+  "key": "race-1789810120168",
+  "elapsedMs": 440,
+  "statuses": {
+    "201": 50
+  },
+  "paymentsCreated": 1,
+  "distinctIds": 1,
+  "expected": 1,
+  "ranAt": "2026-09-19T09:28:40.617Z"
+}

@@ -1,15 +1,66 @@
-# One command brings up both stacks so the viewer can curl them side by side.
-# Standing rule for this channel: the repository must be runnable end to end
+# One command brings up both stacks plus the database, so a viewer can curl
+# them side by side. Standing rule: the repository must be runnable end to end
 # with docker, not just on the machine it was written on.
+#
+# HOST PORTS ARE OVERRIDABLE AND THE DEFAULTS ARE UNCHANGED.
+# Found 2026-09-19 on a clean run: the Node container failed with
+# "listen tcp 0.0.0.0:3000: bind: address already in use", because 3000 is the
+# default for every Next.js and React dev server. The apps already read their
+# port from the environment; it was this file that pinned the host side.
+#
+#     docker compose up                  # 3000, 8080, 5432 as documented
+#     NEST_PORT=3005 docker compose up   # when 3000 is taken
 services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: payments
+      POSTGRES_PASSWORD: payments
+      POSTGRES_DB: payments
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      # Creates payments_spring and payments_node on first start. See the file
+      # for why they are separate.
+      - ./postgres/init-databases.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      # Both applications wait for this. Without it they race the database on a
+      # cold start and fail in a way that looks like a code bug.
+      test: ["CMD-SHELL", "pg_isready -U payments -d payments"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
   spring-boot-api:
     build: ./spring-boot-api
+    init: true
+    depends_on:
+      postgres:
+        condition: service_healthy
     ports:
-      - "8080:8080"
+      - "${SPRING_PORT:-8080}:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payments_spring
+      SPRING_DATASOURCE_USERNAME: payments
+      SPRING_DATASOURCE_PASSWORD: payments
 
   nestjs-api:
     build: ./nestjs-api
+    # WITHOUT THIS, SIGTERM IS IGNORED ENTIRELY.
+    # CMD ["node", ...] makes node PID 1, and Linux PID 1 ignores any signal
+    # with no explicitly installed handler. Measured: the container's uptime
+    # went UP after SIGTERM. init:true puts a tiny init process at PID 1 which
+    # forwards signals to node properly.
+    init: true
+    depends_on:
+      postgres:
+        condition: service_healthy
     ports:
-      - "3000:3000"
+      - "${NEST_PORT:-3000}:3000"
     environment:
       PORT: 3000
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_USER: payments
+      DATABASE_PASSWORD: payments
+      DATABASE_NAME: payments_node

@@ -1,0 +1,6 @@
+{"stack":"SPRING","case":"well formed","status":201}
+{"stack":"NEST","case":"well formed","status":201}
+{"stack":"SPRING","case":"string amount","status":201}
+{"stack":"NEST","case":"string amount","status":400}
+{"stack":"SPRING","case":"undeclared field","status":201}
+{"stack":"NEST","case":"undeclared field","status":400}
