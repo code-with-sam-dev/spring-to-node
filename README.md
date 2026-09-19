@@ -72,3 +72,34 @@ becomes `mvnw.cmd` in PowerShell and CMD.
 `main.ts` reads `process.env.PORT ?? 3000`. If something already holds 3000,
 `PORT=3005 npm run start:dev` moves it without editing a file. That happened
 during the verification run and is worth knowing before it happens to you.
+
+## Which artifact came from which run
+
+`artifacts/` holds output the machine actually produced, not output written by
+hand, and one file needs a label or it reads as a contradiction.
+
+**`idempotency.json` is the AFTER run.** It reports one payment created from
+fifty concurrent requests, which is the fixed behaviour. The opening of the
+video shows the same command producing FIFTY payments, and that run is not in
+this directory because the second run overwrote it. That is the arc of the
+whole video: the same command, unchanged, before and after the constraint.
+
+To reproduce the BEFORE state for yourself:
+
+    # 1. take the guarantee out
+    docker compose exec postgres psql -U postgres -d payments_node \
+      -c 'ALTER TABLE payments DROP CONSTRAINT payments_idempotency_key_key;'
+    # 2. comment out the lookup in
+    #    nestjs-api/src/payments/payments.service.ts
+    docker compose up -d --build nestjs-api
+    # 3. run the identical command
+    node load/idempotency-load.mjs
+
+You will get a number in the dozens rather than fifty exactly, because the
+figure depends on how the runtime interleaves on your machine. Fifty is what
+this machine produced on 2026-09-19 and it is the number on screen.
+
+**`node` in that file is the HOST runtime**, v22.22.2, which is what runs the
+load generator. It is not the runtime under test. The applications run in
+containers on Node 24.21.0 and Java 25, which is what the Dockerfiles pin and
+what the video says.
