@@ -103,3 +103,27 @@ this machine produced on 2026-09-19 and it is the number on screen.
 load generator. It is not the runtime under test. The applications run in
 containers on Node 24.21.0 and Java 25, which is what the Dockerfiles pin and
 what the video says.
+
+## The blocking artifact is the second run too
+
+`artifacts/blocking.json` holds the run **with the work moved to a worker
+thread**: nineteen health checks served during the heavy request, p95 15.3ms,
+and the heavy request itself at 552ms. Those are the figures the video quotes
+for the fixed version, and they are reproducible from this file.
+
+The FIRST run, the one where the handler blocks the event loop, is not in this
+directory because the second run overwrote it. On the day it produced: one
+health check served during the heavy request, p95 432ms on Node, against eleven
+checks and p95 35.1ms on Spring, with the heavy request at 455ms.
+
+To reproduce the blocking version, point the load generator at the synchronous
+endpoint instead of the worker one:
+
+    node load/blocking-load.mjs --path /receipts/sign
+
+Your absolute numbers will differ with your machine. The shape will not: Node
+stops serving and Spring gets slower.
+
+**The Spring figures are measured, not asserted**, but they came from the same
+overwritten run, so treat the exact milliseconds as this machine on that day
+rather than as a benchmark.
