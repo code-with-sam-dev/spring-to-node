@@ -79,6 +79,35 @@ becomes `mvnw.cmd` in PowerShell and CMD.
 `PORT=3005 npm run start:dev` moves it without editing a file. That happened
 during the verification run and is worth knowing before it happens to you.
 
+## Every claim in the videos, and the one command that reproduces it
+
+Nothing in this course is asserted on screen and left for you to believe. Each
+script below starts the real applications, makes the real requests, and
+**asserts its own claim before printing it**, so a wrong sentence in a video
+fails a command here rather than reaching you.
+
+| Script | What it proves | Episode |
+|---|---|---|
+| `scripts/verify-typescript-diffs.sh` | The TypeScript behaviours that differ from Java, each measured | 1 |
+| `scripts/verify-di-tokens.sh` | An interface is erased, so the container refuses it, and a token fixes it | 1 |
+| `scripts/verify-routing.sh` | Route order, the HTTP adapter, the default status code, and `@Controller` | 2 |
+| `scripts/verify-modules.sh` | A provider is private to its module until it is exported | 3 |
+| `scripts/verify-validation.sh` | What a declared type validates, which is nothing | later |
+| `scripts/verify-persistence.sh` | The persistence claims | later |
+| `scripts/verify-shutdown.sh` | Graceful shutdown behaviour | later |
+| `scripts/verify-defect-matrix.sh` | The defect matrix from the flagship | flagship |
+
+Run any of them from the repository root:
+
+```bash
+./scripts/verify-modules.sh
+```
+
+The Spring halves need **Java 25**, which `pom.xml` pins. If your shell default
+is older the build dies with "release version 25 not supported", which reads
+like a broken repository and is not one. The scripts set `JAVA_HOME` themselves
+from `~/.sdkman/candidates/java/25.0.4-amzn`.
+
 ## Which artifact came from which run
 
 `artifacts/` holds output the machine actually produced, not output written by
