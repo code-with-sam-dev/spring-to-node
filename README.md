@@ -5,7 +5,7 @@ the other:
 
 | | | |
 |---|---|---|
-| Spring Boot 4.1.1, Java 21 | `GET http://localhost:8080/health` | `{"status":"UP"}` |
+| Spring Boot 4.1.1, Java 25 | `GET http://localhost:8080/health` | `{"status":"UP"}` |
 | NestJS on Node 24.21.0 | `GET http://localhost:3000/health` | `{"status":"UP"}` |
 
 Every version below was checked on a real machine on 2026-09-19 and the output
@@ -13,12 +13,18 @@ recorded in `VERIFIED-INSTALL-LOG.md`. Nothing here was written from memory.
 
 ## Prerequisites
 
+> **If `./mvnw` says `release version 25 not supported`, your JAVA_HOME is not
+> Java 25.** `pom.xml` pins `<java.version>25</java.version>` and the Dockerfiles
+> build on `eclipse-temurin:25`, so an older JDK on PATH fails at compile with a
+> message that reads like a broken repository. With SDKMAN:
+> `sdk use java 25.0.4-amzn`, or set `JAVA_HOME` explicitly.
+
 | Tool | Version used | Why this one |
 |---|---|---|
 | Node.js | **24.21.0** | The current LTS at the time of recording, September 2026 |
 | npm | **11.19.0** | Ships with that Node, not installed separately |
-| TypeScript | **7.0.2** | Project-local, never global |
-| Java | **21** | LTS, and what Spring Boot 4 supports |
+| TypeScript | **7.0.2** in `node-basics`, **6.0.3** in `nestjs-api` | Project-local, never global. The two differ and both are real |
+| Java | **25** | LTS. `pom.xml` pins it and the Dockerfiles build on it |
 | Maven | 3.9.11, or the bundled `./mvnw` | The wrapper means you need not install Maven |
 | Docker | 29.7.2 | Only needed for the compose path below |
 
