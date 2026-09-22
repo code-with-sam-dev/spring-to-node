@@ -92,6 +92,7 @@ fails a command here rather than reaching you.
 | `scripts/verify-di-tokens.sh` | An interface is erased, so the container refuses it, and a token fixes it | 1 |
 | `scripts/verify-routing.sh` | Route order, the HTTP adapter, the default status code, and `@Controller` | 2 |
 | `scripts/verify-modules.sh` | A provider is private to its module until it is exported | 3 |
+| `scripts/verify-async.sh` | One thread: a blocking handler delays everyone, an awaiting one delays nobody | 4 |
 | `scripts/verify-validation.sh` | What a declared type validates, which is nothing | later |
 | `scripts/verify-persistence.sh` | The persistence claims | later |
 | `scripts/verify-shutdown.sh` | Graceful shutdown behaviour | later |
