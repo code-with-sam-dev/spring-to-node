@@ -29,6 +29,10 @@ echo "=== 3. Validation buys the startup failure back ==="
 node dist/ep05-config/validated-config.js
 echo
 
+echo "=== 3b. The documented fix with Zod, and the boolean trap inside it ==="
+node dist/ep05-config/zod-config.js
+echo
+
 cd ..
 JDK25="$HOME/.sdkman/candidates/java/25.0.4-amzn"
 if [ ! -d "$JDK25" ]; then
