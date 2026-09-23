@@ -56,6 +56,14 @@ run_case "undeclared field"   '{"amountInMinorUnits":1,"currency":"USD","idempot
 run_case "empty object"       '{}'
 run_case "negative and junk"  '{"amountInMinorUnits":-500,"currency":"ZZZ","idempotencyKey":""}'
 
+echo "=== what an undeclared field does to your DTO, with no whitelist ==="
+( cd nestjs-api \
+  && npx tsc --ignoreConfig src/ep06-validation/*.ts --outDir dist/ep06-validation \
+       --experimentalDecorators --emitDecoratorMetadata --module nodenext \
+       --moduleResolution nodenext --target es2023 --skipLibCheck --types node \
+  && node dist/ep06-validation/mass-assignment.js )
+echo
+
 echo "=== why Spring is lenient: the JSON library's defaults, measured ==="
 JDK25="$HOME/.sdkman/candidates/java/25.0.4-amzn"
 if [ -d "$JDK25" ]; then
