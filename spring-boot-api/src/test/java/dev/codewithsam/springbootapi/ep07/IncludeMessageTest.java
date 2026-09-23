@@ -3,6 +3,8 @@ package dev.codewithsam.springbootapi.ep07;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -33,11 +35,18 @@ class IncludeMessageTest {
     @LocalServerPort
     int port;
 
+    @Autowired
+    Environment env;
+
+
     private String get(String path) throws Exception {
-        return HttpClient.newHttpClient().send(
+        HttpResponse<String> res = HttpClient.newHttpClient().send(
                 HttpRequest.newBuilder(
                         URI.create("http://localhost:" + port + path)).build(),
-                HttpResponse.BodyHandlers.ofString()).body();
+                HttpResponse.BodyHandlers.ofString());
+        System.out.println("    content-type: "
+                + res.headers().firstValue("content-type").orElse("(none)"));
+        return res.body();
     }
 
     /*
@@ -49,6 +58,8 @@ class IncludeMessageTest {
     */
     @Test
     void which_messages_does_include_message_actually_restore() throws Exception {
+        System.out.println("  environment sees include-message = "
+                + env.getProperty("server.error.include-message"));
         String framework = get("/ep07/framework");
         String plain = get("/ep07/plain");
 
