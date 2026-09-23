@@ -47,6 +47,19 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-webmvc</artifactId>
 		</dependency>
+		<!-- Episode 9. @Aspect and @Around are the Spring half of the
+		     interceptor comparison, and they are not on the classpath by
+		     default.
+		     NOTE THE NAME. At the time of recording, on Spring Boot 4.1.1 in
+		     September 2026, this starter is spring-boot-starter-ASPECTJ. The
+		     name every tutorial and every older project uses,
+		     spring-boot-starter-aop, is not in the 4.1.1 bill of materials at
+		     all, and the build fails with a missing version rather than a
+		     missing artifact, which points at the wrong problem. -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-aspectj</artifactId>
+		</dependency>
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
