@@ -4,6 +4,9 @@ import org.junit.jupiter.api.Test;
 import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.cfg.CoercionAction;
+import tools.jackson.databind.cfg.CoercionInputShape;
+import tools.jackson.databind.type.LogicalType;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -44,6 +47,25 @@ class JacksonLenienceTest {
         Payment p = mapper.readValue(STRING_AMOUNT, Payment.class);
         System.out.println("default mapper turned \"10000\" into: " + p.amountInMinorUnits());
         assertThat(p.amountInMinorUnits()).isEqualTo(10_000L);
+    }
+
+    /*
+        THE RECIPE SURVIVED THE MOVE, only the import changed. My first attempt
+        at this test used com.fasterxml.jackson.databind for everything and
+        failed to compile, which made it look as though Jackson 3 had dropped
+        coercion configuration. Listing the jar showed the classes sitting in
+        tools.jackson.databind.cfg all along.
+    */
+    @Test
+    void coercion_of_a_string_into_a_number_can_be_switched_off() {
+        JsonMapper strict = JsonMapper.builder()
+                .withCoercionConfig(LogicalType.Integer,
+                        cfg -> cfg.setCoercion(CoercionInputShape.String, CoercionAction.Fail))
+                .build();
+
+        assertThatThrownBy(() -> strict.readValue(STRING_AMOUNT, Payment.class))
+                .satisfies(e -> System.out.println(
+                        "with coercion disabled: " + e.getMessage().split("\n")[0]));
     }
 
     @Test
