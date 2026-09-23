@@ -45,6 +45,14 @@ echo "=== 6. Where @PostConstruct went, and what the ordering is ==="
 node dist/ep03-modules/lifecycle.js
 echo
 
+echo "=== 7. TRANSIENT is not prototype: one instance per consumer ==="
+node dist/ep03-modules/transient.js
+echo
+
+echo "=== 8. Field injection exists here too ==="
+node dist/ep03-modules/property-injection.js
+echo
+
 cd ..
 
 # THE SPRING SIDE NEEDS JAVA 25, AND THE SHELL DEFAULT IS NOT IT.
@@ -57,14 +65,18 @@ if [ ! -d "$JDK25" ]; then
   exit 1
 fi
 
-echo "=== 7. Spring, for contrast: the boundary is the SCAN, not a module ==="
+echo "=== 9. Spring, for contrast: the boundary is the SCAN, not a module ==="
 cd spring-boot-api
 JAVA_HOME="$JDK25" ./mvnw -q -Dtest=ComponentScanTest test
 echo "  both Spring expectations passed:"
 echo "    a scanned bean is available with no export and no import"
 echo "    a bean outside the scan does not exist at all"
-echo "  so Spring has no third state. NestJS's 'declared but not exported' has"
-echo "  no Spring equivalent, which is why the failure has no instinct behind it."
+echo "  in a typical single application context, packages do not create a"
+echo "  visibility boundary. Nest's 'registered but not exported' does."
+echo
+
+echo "=== 10. Spring's prototype, counted in the same three shapes ==="
+JAVA_HOME="$JDK25" ./mvnw -q -Dtest=Ep03PrototypeTest test 2>&1 | grep -A3 '=== Spring, prototype'
 cd ..
 echo
 
