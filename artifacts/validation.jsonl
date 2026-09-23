@@ -4,3 +4,7 @@
 {"stack":"NEST","case":"string amount","status":400}
 {"stack":"SPRING","case":"undeclared field","status":201}
 {"stack":"NEST","case":"undeclared field","status":400}
+{"stack":"SPRING","case":"empty object","status":400}
+{"stack":"NEST","case":"empty object","status":400}
+{"stack":"SPRING","case":"negative and junk","status":400}
+{"stack":"NEST","case":"negative and junk","status":400}

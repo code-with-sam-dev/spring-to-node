@@ -56,4 +56,14 @@ run_case "undeclared field"   '{"amountInMinorUnits":1,"currency":"USD","idempot
 run_case "empty object"       '{}'
 run_case "negative and junk"  '{"amountInMinorUnits":-500,"currency":"ZZZ","idempotencyKey":""}'
 
+echo "=== why Spring is lenient: the JSON library's defaults, measured ==="
+JDK25="$HOME/.sdkman/candidates/java/25.0.4-amzn"
+if [ -d "$JDK25" ]; then
+  ( cd spring-boot-api && JAVA_HOME="$JDK25" ./mvnw -q -Dtest=JacksonLenienceTest test )
+  echo "  coercion and unknown-field behaviour asserted against Jackson directly"
+else
+  echo "  SKIPPED: Java 25 not found at $JDK25" >&2
+fi
+echo
+
 echo "raw results: $OUT/validation.jsonl"
