@@ -17,8 +17,15 @@ class Ep07ThrowController {
 
     /** A custom type with no HTTP meaning attached, like the NestJS demo's. */
     static class InsufficientFunds extends RuntimeException {
+        private final long shortfall;
+
         InsufficientFunds(long shortfall) {
             super("short by " + shortfall);
+            this.shortfall = shortfall;
+        }
+
+        long shortfall() {
+            return shortfall;
         }
     }
 
