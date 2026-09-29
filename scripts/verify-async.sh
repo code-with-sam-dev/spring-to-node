@@ -38,6 +38,14 @@ echo "=== 2. The same wait, awaited, blocks nobody ==="
 node dist/ep04-async/non-blocking.js
 echo
 
+echo "=== 2b. The first benchmark, which measured itself ==="
+node dist/ep04-async/same-process.js
+echo
+
+echo "=== 2c. The same hash, sync and async ==="
+node dist/ep04-async/crypto.js
+echo
+
 cd ..
 JDK25="$HOME/.sdkman/candidates/java/25.0.4-amzn"
 if [ ! -d "$JDK25" ]; then
