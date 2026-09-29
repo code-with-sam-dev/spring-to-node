@@ -61,7 +61,9 @@ echo "=== what an undeclared field does to your DTO, with no whitelist ==="
   && npx tsc --ignoreConfig src/ep06-validation/*.ts --outDir dist/ep06-validation \
        --experimentalDecorators --emitDecoratorMetadata --module nodenext \
        --moduleResolution nodenext --target es2023 --skipLibCheck --types node \
-  && node dist/ep06-validation/mass-assignment.js )
+  && node dist/ep06-validation/mass-assignment.js \
+  && echo && echo "--- the same, through a real HTTP request and ValidationPipe" \
+  && node dist/ep06-validation/live-no-whitelist.js )
 echo
 
 echo "=== why Spring is lenient: the JSON library's defaults, measured ==="
