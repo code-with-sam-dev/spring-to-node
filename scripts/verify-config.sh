@@ -46,7 +46,7 @@ fi
 
 echo "=== 4. Spring, for contrast: it simply refuses ==="
 cd spring-boot-api
-JAVA_HOME="$JDK25" ./mvnw -q -Dtest=MissingPropertyTest test
+JAVA_HOME="$JDK25" ./mvnw -q -Dtest='MissingPropertyTest,GatewayPropertiesTest' test
 cd ..
 echo
 
