@@ -21,6 +21,10 @@ echo "=== 1. The setting is missing. The application starts anyway. ==="
 node dist/ep05-config/missing-config.js
 echo
 
+echo "=== 1b. It started. Then the first payment ==="
+node dist/ep05-config/runtime-failure.js
+echo
+
 echo "=== 2. Everything is a string, including the word false ==="
 node dist/ep05-config/string-trap.js
 echo
