@@ -12,12 +12,12 @@ import { plainToInstance } from 'class-transformer';
  *
  * class-transformer is not a binder in that sense. `plainToInstance` COPIES
  * what it is given unless something strips it, so the object your service
- * receives can carry properties the DTO never declared. If that object is
- * handed to a repository, those properties travel.
+ * receives can carry properties the DTO never declared.
  *
- * THAT MAKES UNCONFIGURED NESTJS MORE EXPOSED THAN DEFAULT SPRING ON THIS ONE
- * POINT, which is the opposite of the direction the episode has been running
- * and is worth measuring rather than asserting.
+ * So on this one point the two stacks differ: Jackson drops the field, while
+ * without whitelist it survives onto the object. Whether that becomes a security
+ * problem depends on what downstream code does with it; live-no-whitelist.ts
+ * measures that it reaches a real handler.
  */
 class CreatePaymentDto {
   @IsInt()
@@ -47,5 +47,5 @@ console.log(`role survived onto the DTO?     ${'role' in (permissive as object) 
 if (!('isAdmin' in (permissive as object))) {
   throw new Error('CLAIM FAILED: expected the undeclared property to survive the transform');
 }
-console.log('\nasserted: without whitelist, undeclared properties reach your service object.');
+console.log('\nasserted: without whitelist, undeclared properties survive onto the DTO instance.');
 console.log('Jackson, by contrast, drops them before your record exists.');
