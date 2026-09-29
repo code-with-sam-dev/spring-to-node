@@ -50,4 +50,4 @@ JAVA_HOME="$JDK25" ./mvnw -q -Dtest='MissingPropertyTest,GatewayPropertiesTest' 
 cd ..
 echo
 
-echo "config verified: a missing setting is undefined here, and fatal there"
+echo "config verified: a missing setting is undefined here, and fatal to a required @Value there"
