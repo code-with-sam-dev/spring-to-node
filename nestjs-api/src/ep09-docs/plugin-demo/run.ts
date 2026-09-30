@@ -34,6 +34,18 @@ class DocsController {
 @Module({ controllers: [DocsController] })
 class AppModule {}
 
+// SERVE_UI=1 keeps the app up with Swagger UI at /docs, expanded, so the page
+// itself can be captured for the episode. The document is the same one measured.
+if (process.env.SERVE_UI) {
+  const ui = await NestFactory.create(AppModule, { logger: false });
+  const d = SwaggerModule.createDocument(ui, new DocumentBuilder().setTitle('payments').setVersion('1').build());
+  SwaggerModule.setup('docs', ui, d, {
+    swaggerOptions: { docExpansion: 'full', defaultModelsExpandDepth: 3, defaultModelExpandDepth: 3 },
+  });
+  await ui.listen(Number(process.env.SERVE_UI));
+  await new Promise(() => undefined);
+}
+
 const app = await NestFactory.create(AppModule, { logger: false });
 const doc = SwaggerModule.createDocument(
   app,
