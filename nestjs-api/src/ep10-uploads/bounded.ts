@@ -81,8 +81,11 @@ if (process.env.ROLE === 'server') {
   child.kill();
 
   console.log('with diskStorage and a one megabyte limit:\n');
-  console.log(`  512 KB  -> ${small.status}  ${small.body}`);
-  console.log(`   50 MB  -> ${tooBig.status}  ${tooBig.body.slice(0, 160)}`);
+  // Compact, so the frame can show exactly what was printed.
+  const ok = JSON.parse(small.body) as { bytes: number; inMemory: boolean; onDisk: boolean; arrayBuffersMb: number };
+  const refused = JSON.parse(tooBig.body) as { message: string; statusCode: number };
+  console.log(`  512 KB  -> ${small.status}  bytes ${ok.bytes}  inMemory ${ok.inMemory}  onDisk ${ok.onDisk}  arrayBuffers ${ok.arrayBuffersMb} MB`);
+  console.log(`   50 MB  -> ${tooBig.status}  ${refused.message}`);
   console.log(`\n  server before anything: arrayBuffers ${before.arrayBuffersMb} MB, rss ${before.rssMb} MB`);
 
   const parsed = JSON.parse(small.body) as {

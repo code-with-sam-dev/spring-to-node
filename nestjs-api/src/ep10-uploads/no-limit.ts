@@ -108,9 +108,15 @@ if (process.env.ROLE === 'server') {
   console.log('  512 KB  -> 200');
   console.log('    2 MB  -> 413 Payload Too Large');
   console.log('\nNestJS, FileInterceptor, nothing configured:');
-  console.log(`  512 KB  -> ${small.status}  ${small.body}`);
-  console.log(`    2 MB  -> ${twoMb.status}  ${twoMb.body}`);
-  console.log(`   50 MB  -> ${fifty.status}  ${fifty.body}`);
+  // Printed compact, field by field, so the episode can show the line exactly as it
+  // was printed; the full JSON bodies ran to 130 characters and would not fit a frame.
+  const line = (size: string, r: { status: number; body: string }) => {
+    const b = JSON.parse(r.body) as { bytes: number; inMemory: boolean };
+    return `${size}  -> ${r.status}  bytes ${b.bytes}  inMemory ${b.inMemory}`;
+  };
+  console.log(line('  512 KB', small));
+  console.log(line('    2 MB', twoMb));
+  console.log(line('   50 MB', fifty));
   console.log('\n--- a FRESH server, one 50 MB upload, nothing else ---');
   console.log('before:');
   console.log(`  heapUsed ${baseline.heapUsedMb} MB   arrayBuffers ${baseline.arrayBuffersMb} MB   rss ${baseline.rssMb} MB`);
