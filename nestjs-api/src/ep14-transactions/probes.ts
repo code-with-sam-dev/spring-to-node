@@ -5,7 +5,7 @@ import { Column, DataSource, Entity, PrimaryGeneratedColumn, Unique } from 'type
  * EPISODE 15 EVIDENCE: transactions and idempotency in TypeORM.
  *
  *   A  inside ds.transaction(m => ...), write through m, then throw: what is left
- *   B  the same, but write through a repository obtained OUTSIDE the transaction
+ *   B  the same, but write through a repository obtained OUTSIDE the transaction, then fixed
  *   C  ten concurrent requests with the same idempotency key, no unique constraint
  *   D  the same, with a unique constraint
  *   E  the constraint, with the violation translated into the existing payment
@@ -113,6 +113,19 @@ try {
 } catch { /* expected */ }
 console.log(`  rows left after the error: ${await count()}`);
 console.log(`  which: ${JSON.stringify((await ledger.find()).map((e) => e.note))}`);
+
+/* B, fixed */
+await ledger.clear();
+console.log('\n=== B, fixed: the repository taken from the manager ===');
+try {
+  await ds.transaction(async (m) => {
+    const repo = m.getRepository(LedgerEntry);
+    await repo.save({ note: 'debit' });
+    await repo.save({ note: 'credit' });
+    throw new Error('boom');
+  });
+} catch { /* expected */ }
+console.log(`  rows left after the error: ${await count()}`);
 
 /* C, D */
 const race = async (label: string, entity: typeof LoosePayment | typeof KeyedPayment) => {

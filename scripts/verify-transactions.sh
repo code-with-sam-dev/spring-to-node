@@ -14,7 +14,7 @@ date -u +"run      %Y-%m-%dT%H:%M:%SZ"
 echo
 
 echo "=== Spring: @Transactional, self-invocation, the idempotency race ==="
-./scripts/test-spring.sh Ep14TransactionsTest 2>&1 | grep -E '=== Spring|^  ' | grep -vE '^  (Detail|Hint):'
+./scripts/test-spring.sh Ep14TransactionsTest 2>&1 | grep -E '=== Spring|^  [a-z0-9[]' | grep -vE '^  (Detail|Hint):'
 echo
 
 echo "=== NestJS: TypeORM transactions and the idempotency race ==="
