@@ -33,8 +33,7 @@ class Ep07Advice {
     @ExceptionHandler(Ep07ThrowController.InsufficientFunds.class)
     ResponseEntity<Map<String, Object>> onInsufficientFunds(
             Ep07ThrowController.InsufficientFunds ex) {
-        // 409, for the same reason as the Nest filter: not a server fault, but
-        // a conflict with the account's current state, which the client can act on.
+        // 409: the account's current state prevents it. Not 402, still reserved.
         return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                 "error", "insufficient_funds",
                 "shortfallInMinorUnits", ex.shortfall(),

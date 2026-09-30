@@ -30,10 +30,7 @@ class InsufficientFunds extends Error {
 class InsufficientFundsFilter implements ExceptionFilter<InsufficientFunds> {
   catch(exception: InsufficientFunds, host: ArgumentsHost) {
     const res = host.switchToHttp().getResponse();
-    // 409 rather than 500: this is not a server fault. The request is well
-    // formed, but the account's current state prevents it, which is a conflict
-    // with current resource state. Not 402, which HTTP still reserves for
-    // future use and so carries no agreed meaning.
+    // 409: the account's current state prevents it. Not 402, still reserved.
     res.status(HttpStatus.CONFLICT).json({
       error: 'insufficient_funds',
       shortfallInMinorUnits: exception.shortfall,
