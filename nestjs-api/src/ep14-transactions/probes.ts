@@ -9,6 +9,10 @@ import { Column, DataSource, Entity, PrimaryGeneratedColumn, Unique } from 'type
  *   C  ten concurrent requests with the same idempotency key, no unique constraint
  *   D  the same, with a unique constraint
  *   E  the constraint, with the violation translated into the existing payment
+ *   F  the same catch, but INSIDE one transaction: what the next query does
+ *   G  same key, different amount: ten concurrent requests, five of each
+ *   H  the outbox: payment and event in one transaction, then the wrong repository for the event
+ *   I  no constraint, check then insert at SERIALIZABLE, with and without a retry
  *
  * The Spring half is Ep14TransactionsTest. Tables ep14_*, created and dropped here.
  */
@@ -49,7 +53,38 @@ class KeyedPayment {
   idempotencyKey!: string;
 }
 
-const ds = new DataSource({ ...base, entities: [LedgerEntry, LoosePayment, KeyedPayment], synchronize: true, poolSize: 20 });
+@Entity('ep14_payments_amount')
+@Unique(['idempotencyKey'])
+class AmountPayment {
+  @PrimaryGeneratedColumn()
+  id!: number;
+
+  @Column()
+  idempotencyKey!: string;
+
+  @Column()
+  amount!: number;
+}
+
+@Entity('ep14_payments_ob')
+class OutboxPayment {
+  @PrimaryGeneratedColumn()
+  id!: number;
+
+  @Column()
+  amount!: number;
+}
+
+@Entity('ep14_outbox')
+class OutboxEvent {
+  @PrimaryGeneratedColumn()
+  id!: number;
+
+  @Column()
+  type!: string;
+}
+
+const ds = new DataSource({ ...base, entities: [LedgerEntry, LoosePayment, KeyedPayment, AmountPayment, OutboxPayment, OutboxEvent], synchronize: true, poolSize: 20 });
 await ds.initialize();
 const ledger = ds.getRepository(LedgerEntry);
 const count = async () => ledger.count();
@@ -116,5 +151,109 @@ await race('D: the same, with a unique constraint on the key', KeyedPayment);
   console.log(`  rows with key pay-42: ${await repo.countBy({ idempotencyKey: 'pay-42' })}`);
 }
 
-await ds.query('DROP TABLE IF EXISTS ep14_ledger, ep14_payments_loose, ep14_payments_keyed');
+const codeOf = (e: unknown) => (e as { code?: string }).code ?? (e as Error).message;
+const tallyOf = (xs: string[]) => xs.reduce<Record<string, number>>((acc, t) => ({ ...acc, [t]: (acc[t] ?? 0) + 1 }), {});
+
+/* F */
+{
+  const repo = ds.getRepository(KeyedPayment);
+  await repo.clear();
+  await repo.save({ idempotencyKey: 'pay-42' });
+  console.log('\n=== F: catch the duplicate INSIDE the transaction, then look up the existing payment ===');
+  try {
+    await ds.transaction(async (m) => {
+      try {
+        await m.insert(KeyedPayment, { idempotencyKey: 'pay-42' });
+      } catch (e) {
+        console.log(`  insert failed: ${codeOf(e)}`);
+        const existing = await m.findOneBy(KeyedPayment, { idempotencyKey: 'pay-42' });
+        console.log(`  lookup returned payment id ${existing?.id}`);
+      }
+    });
+  } catch (e) {
+    console.log(`  lookup failed: ${codeOf(e)} ${(e as Error).message}`);
+  }
+}
+
+/* G */
+{
+  const repo = ds.getRepository(AmountPayment);
+  await repo.clear();
+  const outcomes = await Promise.all(Array.from({ length: 10 }, async (_, i) => {
+    const amount = i % 2 === 0 ? 1000 : 5000;
+    try {
+      await repo.insert({ idempotencyKey: 'pay-42', amount });
+      return `amount ${amount}: created`;
+    } catch (e) {
+      if (codeOf(e) !== '23505') throw e;
+      const existing = await repo.findOneByOrFail({ idempotencyKey: 'pay-42' });
+      return existing.amount === amount ? `amount ${amount}: returned existing` : `amount ${amount}: 409 conflict`;
+    }
+  }));
+  console.log('\n=== G: same key, different amount, five requests of each ===');
+  for (const [k, v] of Object.entries(tallyOf(outcomes)).sort()) console.log(`  ${v} x ${k}`);
+  console.log(`  rows with key pay-42: ${await repo.countBy({ idempotencyKey: 'pay-42' })}`);
+}
+
+/* H */
+{
+  const payments = ds.getRepository(OutboxPayment);
+  const outbox = ds.getRepository(OutboxEvent);
+  const rows = async () => `payment rows ${await payments.count()}, outbox rows ${await outbox.count()}`;
+  console.log('\n=== H: the outbox, payment and event in one transaction ===');
+  await payments.clear(); await outbox.clear();
+  await ds.transaction(async (m) => {
+    await m.save(OutboxPayment, { amount: 1000 });
+    await m.save(OutboxEvent, { type: 'PaymentCreated' });
+  });
+  console.log(`  committed:              ${await rows()}`);
+  await payments.clear(); await outbox.clear();
+  try {
+    await ds.transaction(async (m) => {
+      await m.save(OutboxPayment, { amount: 1000 });
+      await m.save(OutboxEvent, { type: 'PaymentCreated' });
+      throw new Error('boom');
+    });
+  } catch { /* expected */ }
+  console.log(`  failed after both:      ${await rows()}`);
+  await payments.clear(); await outbox.clear();
+  try {
+    await ds.transaction(async (m) => {
+      await m.save(OutboxPayment, { amount: 1000 });
+      await outbox.save({ type: 'PaymentCreated' });
+      throw new Error('boom');
+    });
+  } catch { /* expected */ }
+  console.log(`  event via injected repo: ${await rows()}`);
+}
+
+/* I */
+{
+  const repo = ds.getRepository(LoosePayment);
+  const attempt = () => ds.transaction('SERIALIZABLE', async (m) => {
+    const existing = await m.findOneBy(LoosePayment, { idempotencyKey: 'pay-42' });
+    if (existing) return 'duplicate, returned existing';
+    await m.insert(LoosePayment, { idempotencyKey: 'pay-42' });
+    return 'inserted';
+  });
+  await repo.clear();
+  const once = await Promise.all(Array.from({ length: 10 }, () => attempt().catch((e) => `rejected: ${codeOf(e)}`)));
+  console.log('\n=== I: no constraint, check then insert, SERIALIZABLE ===');
+  for (const [k, v] of Object.entries(tallyOf(once)).sort()) console.log(`  ${v} x ${k}`);
+  console.log(`  rows with key pay-42: ${await repo.countBy({ idempotencyKey: 'pay-42' })}`);
+
+  await repo.clear();
+  let retries = 0;
+  const withRetry = async (): Promise<string> => {
+    for (;;) {
+      try { return await attempt(); } catch (e) { if (codeOf(e) !== '40001') throw e; retries++; }
+    }
+  };
+  const retried = await Promise.all(Array.from({ length: 10 }, withRetry));
+  console.log('  the same, retrying on 40001:');
+  for (const [k, v] of Object.entries(tallyOf(retried)).sort()) console.log(`  ${v} x ${k}`);
+  console.log(`  retries: ${retries}, rows with key pay-42: ${await repo.countBy({ idempotencyKey: 'pay-42' })}`);
+}
+
+await ds.query('DROP TABLE IF EXISTS ep14_ledger, ep14_payments_loose, ep14_payments_keyed, ep14_payments_amount, ep14_payments_ob, ep14_outbox');
 await ds.destroy();
