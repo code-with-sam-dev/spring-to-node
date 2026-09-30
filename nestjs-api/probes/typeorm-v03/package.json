@@ -1,0 +1,11 @@
+{
+  "name": "ep12-typeorm-v03-probe",
+  "private": true,
+  "type": "module",
+  "description": "Episode 13: the same findOneBy on TypeORM 0.3, the line many projects still run. Pinned on purpose.",
+  "dependencies": {
+    "pg": "8.23.0",
+    "reflect-metadata": "0.2.2",
+    "typeorm": "0.3.30"
+  }
+}
