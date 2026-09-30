@@ -5,6 +5,10 @@ import { execSync, spawn } from 'node:child_process';
 const redisId = execSync('docker run -d --rm -p 127.0.0.1::6379 redis:8-alpine').toString().trim();
 const redisPort = execSync(`docker port ${redisId} 6379`).toString().trim().split(':').pop();
 const redisUrl = `redis://127.0.0.1:${redisPort}`;
+const pgId = execSync('docker run -d --rm -e POSTGRES_PASSWORD=payments -p 127.0.0.1::5432 postgres:18-alpine').toString().trim();
+const pgPort = execSync(`docker port ${pgId} 5432`).toString().trim().split(':').pop();
+const databaseUrl = `postgres://postgres:payments@127.0.0.1:${pgPort}/postgres`;
+const psql = (sql) => execSync(`docker exec ${pgId} psql -U postgres -tAc "${sql}"`).toString().trim();
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const redis = (cmd) => execSync(`docker exec ${redisId} redis-cli ${cmd}`).toString().trim();
 const count = (list) => Number(redis(`LLEN ${list}`));
@@ -25,9 +29,10 @@ async function up(url) {
 async function start(stack, env = {}) {
   const port = nextPort++;
   const proc = stack === 'nest'
-    ? spawn('node', ['dist/ep25-queues/main.js', redisUrl, String(port)], { cwd: 'nestjs-api', env: { ...process.env, ...env } })
+    ? spawn('node', ['dist/ep25-queues/main.js', redisUrl, String(port)], { cwd: 'nestjs-api', env: { ...process.env, DATABASE_URL: databaseUrl, ...env } })
     : spawn(process.env.JAVA_HOME + '/bin/java', ['-jar', 'spring-queues/target/spring-queues-0.0.1-SNAPSHOT.jar',
-      `--server.port=${port}`, `--spring.data.redis.port=${redisPort}`, '--logging.level.root=OFF', '--spring.main.banner-mode=off']);
+      `--server.port=${port}`, `--spring.data.redis.port=${redisPort}`, '--logging.level.root=OFF', '--spring.main.banner-mode=off',
+      ...(env.SPRING_POOL ? [`--spring.task.execution.pool.core-size=${env.SPRING_POOL}`, `--spring.task.execution.pool.max-size=${env.SPRING_POOL}`] : [])]);
   const url = `http://127.0.0.1:${port}`;
   await up(url);
   return { url, kill: () => proc.kill('SIGKILL') };
@@ -90,8 +95,25 @@ try {
   console.log(`  Spring, C, @Async returning CompletableFuture, joined: POST answered ${future.status} ${future.body}`);
   app.kill();
 
-  // D: ten 500 ms receipts.
-  for (const [stack, label, env, mode] of [['nest', 'BullMQ, worker concurrency 1 (default)', { RECEIPTS_CONCURRENCY: '1' }, '&mode=bull'], ['nest', 'BullMQ, worker concurrency 5', { RECEIPTS_CONCURRENCY: '5' }, '&mode=bull'], ['spring', '@Async on Boot\'s default executor', {}, '']]) {
+  // E: the payment commits to Postgres, then the process dies before the receipt is queued.
+  for (let i = 0; i < 60; i++) {
+    try {
+      psql('SELECT 1');
+      break;
+    } catch {
+      await wait(500);
+    }
+  }
+  redis('FLUSHALL');
+  app = await start('nest', { CRASH_AFTER_COMMIT: '1' });
+  const crashed = await fetch(`${app.url}/payments`, { method: 'POST' }).then((r) => `answered ${r.status}`, () => 'never answered: the process died');
+  app = await start('nest');
+  await wait(5000);
+  console.log(`  Nest, E, commit the payment to Postgres, crash before queue.add: the request ${crashed}; after the restart, payments in Postgres ${psql('SELECT count(*) FROM ep26_payments')}, receipt jobs in Redis ${redis("EVAL \"return #redis.call('keys','bull:receipts:[0-9]*')\" 0")}, receipts sent ${count('sent')}`);
+  app.kill();
+
+  // D: ten 500 ms receipts, concurrency set explicitly on both.
+  for (const [stack, label, env, mode] of [['nest', 'BullMQ, worker concurrency 1 (the default)', { RECEIPTS_CONCURRENCY: '1' }, '&mode=bull'], ['nest', 'BullMQ, worker concurrency 5', { RECEIPTS_CONCURRENCY: '5' }, '&mode=bull'], ['spring', '@Async, executor of 1 thread', { SPRING_POOL: '1' }, ''], ['spring', '@Async, executor of 5 threads', { SPRING_POOL: '5' }, '']]) {
     redis('FLUSHALL');
     app = await start(stack, env);
     const t = Date.now();
@@ -101,5 +123,5 @@ try {
     app.kill();
   }
 } finally {
-  execSync(`docker stop ${redisId}`);
+  execSync(`docker stop ${redisId} ${pgId}`);
 }

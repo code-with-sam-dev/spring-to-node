@@ -66,6 +66,7 @@
     "@types/multer": "^2.2.0",
     "@types/node": "^24.0.0",
     "@types/opossum": "^8.1.9",
+    "@types/pg": "^8.23.1",
     "@types/supertest": "^7.0.0",
     "@vitest/coverage-v8": "^5.0.3",
     "fastify": "^5.12.5",

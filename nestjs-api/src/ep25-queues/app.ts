@@ -4,6 +4,7 @@ import { Controller, Inject, Injectable, Module, Post, Query } from '@nestjs/com
 import { NestFactory } from '@nestjs/core';
 import { Job, Queue } from 'bullmq';
 import { Redis } from 'ioredis';
+import { Client } from 'pg';
 
 /**
  * EPISODE 26. Receipts sent in the background, three ways: a promise nobody awaits, a BullMQ queue
@@ -70,6 +71,22 @@ class ReceiptsController {
   async flaky(@Query('retries') retries: string) {
     const options = retries ? { attempts: 3, backoff: { type: 'exponential', delay: 200 } } : {};
     await this.receipts.add('receipt', { id: 'flaky', ms: 10, failFirst: true }, options);
+    return { accepted: 1 };
+  }
+
+  /**
+   * The payment is committed to Postgres, then the receipt is queued. Two systems, two writes.
+   * CRASH_AFTER_COMMIT=1 kills the process between them, the way a crash or a deploy can.
+   */
+  @Post('payments')
+  async pay() {
+    const db = new Client({ connectionString: process.env.DATABASE_URL });
+    await db.connect();
+    await db.query('CREATE TABLE IF NOT EXISTS ep26_payments (id TEXT PRIMARY KEY)');
+    await db.query("INSERT INTO ep26_payments (id) VALUES ('pay_1')");
+    await db.end();
+    if (process.env.CRASH_AFTER_COMMIT === '1') process.kill(process.pid, 'SIGKILL');
+    await this.receipts.add('receipt', { id: 'pay_1', ms: 10 });
     return { accepted: 1 };
   }
 
