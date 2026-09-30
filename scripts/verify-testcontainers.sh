@@ -17,6 +17,10 @@ echo "=== Spring: @ServiceConnection container, run twice ==="
 ./scripts/test-spring.sh Ep18ContainerTest 2>&1 | grep -E '^  Spring|postgres:18-alpine started in'
 echo
 
+echo "=== Spring: one container shared by three classes through a base class ==="
+./scripts/test-spring.sh 'Ep18Shared*Test' 2>&1 | grep -E '^  Spring|postgres:18-alpine started in'
+echo
+
 cd nestjs-api
 echo "=== Nest: a container per run, run twice ==="
 npx vitest run --config src/ep18-testcontainers/vitest.config.ts src/ep18-testcontainers/fresh.spec.ts --reporter=verbose 2>&1 | grep -E '^  Nest'
