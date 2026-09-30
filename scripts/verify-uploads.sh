@@ -50,7 +50,8 @@ echo "=== NestJS: four users download the same 200 MB file ==="
   && echo \
   && SIZES=200 CONC=4 node dist/ep10-uploads/download-probe.js \
   && echo \
-  && SIZES=200 CONC=4 SLOW_MBPS=40 GC_EVERY_MS=20 node dist/ep10-uploads/download-probe.js )
+  && echo "--- forced GC, six runs, because this figure varies run to run ---" \
+  && for i in 1 2 3 4 5 6; do SIZES=200 CONC=4 SLOW_MBPS=40 GC_EVERY_MS=20 node dist/ep10-uploads/download-probe.js | grep -E '200 MB'; done )
 echo
 
 echo "=== NestJS: diskStorage and a limit, which is what Spring had for free ==="
