@@ -42,7 +42,7 @@ echo
 echo "=== NestJS: the plugin with classValidatorShim off (where the constraints come from) ==="
 ( cd nestjs-api && rm -rf dist/ep09-shim \
   && OUT_DIR=dist/ep09-shim PLUGIN_OPTIONS='{"classValidatorShim":false}' node tools/build-with-plugin.mjs \
-  && node dist/ep09-shim/run.js )
+  && PLUGIN_OPTIONS='{"classValidatorShim":false}' node dist/ep09-shim/run.js )
 echo
 
 echo "=== NestJS: widening the filename filter ==="
@@ -50,7 +50,7 @@ echo "=== NestJS: widening the filename filter ==="
   && OUT_DIR=dist/ep09-suffix PLUGIN_OPTIONS='{"dtoFileNameSuffix":[".dto.ts",".entity.ts",".ts"]}' node tools/build-with-plugin.mjs 2>&1 | grep -o 'Skipping dtoFileNameSuffix option.*behaviour\.' || true )
 ( cd nestjs-api && rm -rf dist/ep09-suffix \
   && OUT_DIR=dist/ep09-suffix PLUGIN_OPTIONS='{"dtoFileNameSuffix":[".dto.ts",".entity.ts","-receipt.ts"]}' node tools/build-with-plugin.mjs \
-  && node dist/ep09-suffix/run.js | sed -n 3,4p )
+  && PLUGIN_OPTIONS='{"dtoFileNameSuffix":["-receipt.ts"]}' node dist/ep09-suffix/run.js | sed -n 3,4p )
 echo
 
 echo "=== Spring: the same three fields, and a schema name collision ==="
