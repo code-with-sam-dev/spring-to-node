@@ -36,8 +36,21 @@ echo "=== NestJS: the same two uploads, and what they cost the process ==="
   && node dist/ep10-uploads/no-limit.js )
 echo
 
-echo "=== NestJS: sending 50 MB back, buffered against streamed ==="
-( cd nestjs-api && node dist/ep10-uploads/download.js )
+echo "=== NestJS: four users download the same 200 MB file ==="
+# download-probe.ts samples arrayBuffers every 2 ms inside the server. The second run
+# forces a full GC every 20 ms and caps the client at 40 MB/s, so garbage cannot pile
+# up between collections: what is left is memory the response still references.
+# (download.ts's "held" figure is retired: an idle process never collects, so a
+# reading after the response cannot tell garbage from live memory.)
+( cd nestjs-api \
+  && npx tsc --ignoreConfig src/ep10-uploads/download-probe.ts --outDir dist/ep10-uploads \
+       --experimentalDecorators --emitDecoratorMetadata --module nodenext \
+       --moduleResolution nodenext --target es2023 --skipLibCheck --types node \
+  && SIZES=10,50,200 CONC=1 node dist/ep10-uploads/download-probe.js \
+  && echo \
+  && SIZES=200 CONC=4 node dist/ep10-uploads/download-probe.js \
+  && echo \
+  && SIZES=200 CONC=4 SLOW_MBPS=40 GC_EVERY_MS=20 node dist/ep10-uploads/download-probe.js )
 echo
 
 echo "=== NestJS: diskStorage and a limit, which is what Spring had for free ==="
