@@ -8,6 +8,7 @@ import { Column, DataSource, Entity, PrimaryGeneratedColumn, Unique } from 'type
  *   B  the same, but write through a repository obtained OUTSIDE the transaction
  *   C  ten concurrent requests with the same idempotency key, no unique constraint
  *   D  the same, with a unique constraint
+ *   E  the constraint, with the violation translated into the existing payment
  *
  * The Spring half is Ep14TransactionsTest. Tables ep14_*, created and dropped here.
  */
@@ -96,6 +97,24 @@ const race = async (label: string, entity: typeof LoosePayment | typeof KeyedPay
 };
 await race('C: 10 concurrent requests, same key, check then insert, no constraint', LoosePayment);
 await race('D: the same, with a unique constraint on the key', KeyedPayment);
+
+/* E */
+{
+  const repo = ds.getRepository(KeyedPayment);
+  await repo.clear();
+  const ids = await Promise.all(Array.from({ length: 10 }, async () => {
+    try {
+      return (await repo.save({ idempotencyKey: 'pay-42' })).id;
+    } catch (e) {
+      if ((e as { code?: string }).code !== '23505') throw e;
+      return (await repo.findOneByOrFail({ idempotencyKey: 'pay-42' })).id;
+    }
+  }));
+  const counts = ids.reduce<Record<string, number>>((acc, id) => ({ ...acc, [id]: (acc[id] ?? 0) + 1 }), {});
+  console.log('\n=== E: the constraint, and the violation translated into the existing payment ===');
+  for (const [k, v] of Object.entries(counts)) console.log(`  ${v} x payment id ${k}`);
+  console.log(`  rows with key pay-42: ${await repo.countBy({ idempotencyKey: 'pay-42' })}`);
+}
 
 await ds.query('DROP TABLE IF EXISTS ep14_ledger, ep14_payments_loose, ep14_payments_keyed');
 await ds.destroy();

@@ -3,6 +3,7 @@ package dev.codewithsam.springbootapi.ep14;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  *   B  the same method called through `this` (self-invocation)
  *   C  ten concurrent requests, same key, check then insert, no constraint
  *   D  the same with a unique constraint
+ *   E  the constraint, with the violation translated into the existing payment
  */
 @SpringBootTest(properties = "spring.jpa.hibernate.ddl-auto=update")
 class Ep14TransactionsTest {
@@ -51,6 +53,14 @@ class Ep14TransactionsTest {
         keyed.deleteAll();
         race("Spring, D: the same, with a unique constraint on the key",
                 () -> { if (keyed.existsByIdempotencyKey("pay-42")) return "duplicate, returned existing"; keyed.save(new Ep14KeyedPayment("pay-42")); return "inserted"; });
+        System.out.println("  rows with key pay-42: " + keyed.countByIdempotencyKey("pay-42"));
+
+        keyed.deleteAll();
+        race("Spring, E: the constraint, and the violation translated into the existing payment",
+                () -> {
+                    try { return "payment id " + keyed.save(new Ep14KeyedPayment("pay-42")).getId(); }
+                    catch (DataIntegrityViolationException taken) { return "payment id " + keyed.findByIdempotencyKey("pay-42").orElseThrow().getId(); }
+                });
         System.out.println("  rows with key pay-42: " + keyed.countByIdempotencyKey("pay-42"));
 
         assertThat(keyed.countByIdempotencyKey("pay-42")).isEqualTo(1);

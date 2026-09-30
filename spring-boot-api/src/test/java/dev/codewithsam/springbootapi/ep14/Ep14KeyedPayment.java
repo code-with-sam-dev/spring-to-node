@@ -24,4 +24,8 @@ public class Ep14KeyedPayment {
     public Ep14KeyedPayment(String key) {
         this.idempotencyKey = key;
     }
+
+    public Long getId() {
+        return id;
+    }
 }
