@@ -68,7 +68,6 @@ class OwnedController {
     // retried or queued.
     void writeAudit().catch((err: Error) => {
       logger.error(`background audit write failed: ${err.message}`);
-      process.send?.(`logged: background audit write failed: ${err.message}`);
     });
     return { started: true };
   }
@@ -84,7 +83,13 @@ class OwnedController {
 class AppModule {}
 
 if (process.env.ROLE === 'server') {
-  const app = await NestFactory.create(AppModule, { logger: false });
+  // Errors logged by the app go to the parent over IPC, so the harness can
+  // assert the failure was logged without any plumbing inside the handler.
+  const quiet = () => undefined;
+  const app = await NestFactory.create(AppModule, {
+    logger: { log: quiet, warn: quiet, debug: quiet, verbose: quiet,
+      error: (m: unknown) => process.send?.(`logged: ${String(m)}`) },
+  });
   app.useGlobalFilters(new InsufficientFundsFilter());
   await app.listen(PORT);
   process.send?.('ready');
