@@ -62,6 +62,6 @@ if (listed.allowOrigin === EVIL) throw new Error('CLAIM FAILED: the allow list l
 if (reflect.allowOrigin !== EVIL || reflect.allowCredentials !== 'true') {
   throw new Error(`CLAIM FAILED: origin:true did not reflect the stranger with credentials: ${JSON.stringify(reflect)}`);
 }
-console.log('\nasserted: every configuration returned 200. The handler ran every time.');
+console.log('\nasserted: every configuration returned 200 (handler runs are counted in preflight.ts)');
 console.log('asserted: origin: true + credentials: true echoes ANY origin back, with');
 console.log('          credentials allowed, so any site can make authenticated reads');
