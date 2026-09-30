@@ -21,7 +21,7 @@ class PaymentsRepository {
   async find(id: string) {
     this.loads.count++;
     await new Promise((r) => setTimeout(r, 50));
-    return { id, status: this.rows.get(id) };
+    return id.startsWith('missing') ? null : { id, status: this.rows.get(id) ?? 'pending' };
   }
 
   update(id: string, status: string) {
@@ -112,14 +112,14 @@ class PaymentsController {
   }
 }
 
-export async function startApp(opts: { redisUrl?: string } = {}) {
+export async function startApp(opts: { redisUrl?: string; ttl?: number } = {}) {
   const loads = new Loads();
 
   @Module({
     imports: [
       opts.redisUrl
-        ? CacheModule.register({ stores: [new KeyvRedis(opts.redisUrl)] })
-        : CacheModule.register(),
+        ? CacheModule.register({ stores: [new KeyvRedis(opts.redisUrl)], ttl: opts.ttl })
+        : CacheModule.register({ ttl: opts.ttl }),
     ],
     controllers: [PaymentsController, AccountController],
     providers: [PaymentsRepository, PaymentsReader, { provide: Loads, useValue: loads }],

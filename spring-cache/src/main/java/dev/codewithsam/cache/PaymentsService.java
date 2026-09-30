@@ -21,7 +21,7 @@ public class PaymentsService {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
-        return new Payment(id, rows.getOrDefault(id, "unknown"));
+        return id.startsWith("missing") ? null : new Payment(id, rows.getOrDefault(id, "pending"));
     }
 
     /** Loads so far. A method, because the cache proxy has no field of its own. */

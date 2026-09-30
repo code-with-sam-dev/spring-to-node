@@ -1,8 +1,11 @@
 package dev.codewithsam.cache;
 
+import java.time.Duration;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.cache.RedisCacheWriter;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -13,7 +16,10 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 class LockingRedisCacheConfig {
 
     @Bean
-    RedisCacheManager cacheManager(RedisConnectionFactory connections) {
-        return RedisCacheManager.builder(RedisCacheWriter.lockingRedisCacheWriter(connections)).build();
+    RedisCacheManager cacheManager(RedisConnectionFactory connections,
+                                   @Value("${spring.cache.redis.time-to-live:0s}") Duration ttl) {
+        return RedisCacheManager.builder(RedisCacheWriter.lockingRedisCacheWriter(connections))
+            .cacheDefaults(RedisCacheConfiguration.defaultCacheConfig().entryTtl(ttl))
+            .build();
     }
 }
