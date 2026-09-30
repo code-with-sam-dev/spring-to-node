@@ -31,6 +31,21 @@ services:
       timeout: 3s
       retries: 20
 
+  # Episode 16. A single-node REPLICA SET, not a plain mongod: multi-document
+  # transactions need one, and a plain mongod rejects them. Host port 27018 by
+  # default, because 27017 is the port a locally installed MongoDB already holds.
+  mongo:
+    image: mongo:8
+    command: ["--replSet", "rs0", "--bind_ip_all"]
+    ports:
+      - "${MONGO_PORT:-27018}:27017"
+    healthcheck:
+      # Initiates the set on first start, then reports healthy once it is PRIMARY.
+      test: ["CMD-SHELL", "mongosh --quiet --eval \"try { rs.status().ok } catch (e) { rs.initiate({_id: 'rs0', members: [{_id: 0, host: 'localhost:27017'}]}).ok }\" | grep -q 1"]
+      interval: 3s
+      timeout: 5s
+      retries: 30
+
   spring-boot-api:
     build: ./spring-boot-api
     init: true
