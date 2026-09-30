@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { Column, DataSource, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { BeforeUpdate, Column, DataSource, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 /**
  * EPISODE 13 EVIDENCE: what a JPA developer assumes about a TypeORM entity, measured.
@@ -9,6 +9,7 @@ import { Column, DataSource, Entity, PrimaryGeneratedColumn } from 'typeorm';
  *   C  rename a property under synchronize   what happens to the column's data
  *   D  a bigint column                        what type the value is in JavaScript
  *   E  repository.save() on a new entity      which SQL statements it sends
+ *   F  save(entity) against update(id, partial)  the SQL, and whether @BeforeUpdate runs
  *
  * Every table is ep12_*, created and dropped here, in the payments_node database.
  */
@@ -31,7 +32,15 @@ class Account {
 
   @Column({ type: 'bigint' })
   balanceInMinorUnits!: string;
+
+  /* F: a lifecycle hook, to see which update path fires it. */
+  @BeforeUpdate()
+  touched() {
+    listenerRuns++;
+  }
 }
+
+let listenerRuns = 0;
 
 /* C: the same table, before and after a property rename. */
 @Entity('ep12_customers')
@@ -93,6 +102,7 @@ console.log('\n=== D: a bigint column, read back ===');
 const bob = await repo.findOneByOrFail({ owner: 'bob' });
 console.log(`  balanceInMinorUnits = ${JSON.stringify(bob.balanceInMinorUnits)}  typeof ${typeof bob.balanceInMinorUnits}`);
 console.log(`  Number(...) = ${Number(bob.balanceInMinorUnits)}   (exact value 9007199254740993)`);
+console.log(`  BigInt(...) = ${BigInt(bob.balanceInMinorUnits)}`);
 
 /* E */
 console.log('\n=== E: repository.save() on a new entity, the SQL sent ===');
@@ -106,6 +116,20 @@ carol.owner = 'carol-2';
 await repo.save(carol);
 console.log('  ... and save() on a loaded, changed entity:');
 for (const s of statements) console.log(`  ${s.slice(0, 140)}`);
+
+/* F */
+console.log('\n=== F: the same change two ways, save(entity) and update(id, partial) ===');
+const dave = await repo.save({ owner: 'dave', balanceInMinorUnits: '7' });
+const loaded = await repo.findOneByOrFail({ id: dave.id });
+statements.length = 0; listenerRuns = 0;
+loaded.owner = 'dave-via-save';
+await repo.save(loaded);
+console.log(`  save(entity):        @BeforeUpdate ran ${listenerRuns}x`);
+for (const q of statements) console.log(`    ${q.slice(0, 110)}`);
+statements.length = 0; listenerRuns = 0;
+await repo.update(dave.id, { owner: 'dave-via-update' });
+console.log(`  update(id, partial): @BeforeUpdate ran ${listenerRuns}x`);
+for (const q of statements) console.log(`    ${q.slice(0, 110)}`);
 await repo.query('DROP TABLE IF EXISTS ep12_accounts');
 await ds.destroy();
 
