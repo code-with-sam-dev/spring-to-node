@@ -15,6 +15,7 @@ echo
 
 echo "=== Spring: Spring Data MongoDB ==="
 ./scripts/test-spring.sh Ep15MongoTest 2>&1 | grep -E '=== Spring|^  [a-z]'
+./scripts/test-spring.sh Ep15ValidatingTest 2>&1 | grep -E '=== Spring|^  [a-z]'
 echo
 
 echo "=== NestJS: Mongoose ==="
