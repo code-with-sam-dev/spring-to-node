@@ -14,8 +14,8 @@ date -u +"run       %Y-%m-%dT%H:%M:%SZ"
 echo
 
 echo "=== Spring: Spring Data MongoDB ==="
-./scripts/test-spring.sh Ep15MongoTest 2>&1 | grep -E '=== Spring|^  [a-z]'
-./scripts/test-spring.sh Ep15ValidatingTest 2>&1 | grep -E '=== Spring|^  [a-z]'
+./scripts/test-spring.sh Ep15MongoTest 2>&1 | grep -E '=== Spring|^  [a-zA-Z]'
+./scripts/test-spring.sh Ep15ValidatingTest 2>&1 | grep -E '=== Spring|^  [a-zA-Z]'
 echo
 
 echo "=== NestJS: Mongoose ==="
