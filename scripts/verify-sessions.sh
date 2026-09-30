@@ -42,3 +42,7 @@ echo
 
 echo "=== NestJS: what a stranger's origin is told, four ways ==="
 ( cd nestjs-api && node dist/ep11-sessions/cors.js )
+echo
+
+echo "=== NestJS: two browser paths, a simple GET and a preflighted PUT ==="
+( cd nestjs-api && node dist/ep11-sessions/preflight.js )
