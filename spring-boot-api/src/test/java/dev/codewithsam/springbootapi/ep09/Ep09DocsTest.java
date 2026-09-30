@@ -46,6 +46,9 @@ class Ep09DocsTest {
 
         System.out.println("=== Spring, the same three fields, no OpenAPI annotations ===");
         System.out.println(schema.toPrettyString());
+        for (String f : properties) {
+            System.out.println("  schema " + f + " " + schema.path("properties").path(f));
+        }
         System.out.println("properties documented: " + properties.size() + " of 3");
         System.out.println("required documented:   " + schema.path("required").size() + " of 3");
 

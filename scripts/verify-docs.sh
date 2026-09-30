@@ -56,7 +56,7 @@ echo
 echo "=== Spring: the same three fields, and a schema name collision ==="
 if docker compose ps postgres 2>/dev/null | grep -q 'Up\|running'; then
   ./scripts/test-spring.sh Ep09DocsTest 2>&1 \
-    | grep -E '=== Spring|properties documented|required documented|what the document|^  \{"type"|^  payments\.|^  ep09\.'
+    | grep -E '=== Spring|properties documented|required documented|what the document|^  \{"type"|^  payments\.|^  ep09\.|^  schema '
   ./scripts/test-spring.sh Ep09FqnTest 2>&1 | grep -E '=== Spring|CreatePaymentRequest  currency'
 else
   echo "  SKIPPED: the database is not up. Run: docker compose up -d" >&2
