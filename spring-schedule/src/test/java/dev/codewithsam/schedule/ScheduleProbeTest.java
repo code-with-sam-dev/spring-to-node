@@ -82,9 +82,14 @@ class ScheduleProbeTest {
     @Test
     void overlap() throws Exception {
         try (var a = start("a", "report", Map.of())) {
-            Thread.sleep(3000);
+            Thread.sleep(5000);
         }
-        System.out.printf("  Spring, C, @Scheduled(fixedRate = 500), a job that takes 1.5 s, 3 s: runs started %d, most at once %d%n", count("report", null), maxConcurrent("report"));
+        System.out.printf("  Spring, C, @Scheduled every second, a job that takes 2.5 s, 5 s: runs started %d, most at once %d%n", count("report", null), maxConcurrent("report"));
+        RunLog.RUNS.clear();
+        try (var a = start("a", "report", Map.of("spring.task.scheduling.pool.size", 4))) {
+            Thread.sleep(5000);
+        }
+        System.out.printf("  Spring, C, @Scheduled every second, pool size 4, a job that takes 2.5 s, 5 s: runs started %d, most at once %d%n", count("report", null), maxConcurrent("report"));
     }
 
     @Test

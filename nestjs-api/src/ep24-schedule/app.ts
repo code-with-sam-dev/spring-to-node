@@ -36,21 +36,27 @@ export async function startApp(opts: { name: string; jobs: string[]; log: Run[];
       if (on('settleOnce')) record('settleOnce', 'start');
     }
 
-    @Interval(500)
+    @Cron('* * * * * *')
     async report() {
-      if (!on('report')) return;
-      record('report', 'start');
-      await new Promise((r) => setTimeout(r, 1500));
-      record('report', 'end');
+      await this.run('report');
     }
 
-    @Interval(500)
+    @Cron('* * * * * *', { waitForCompletion: true })
+    async reportWaiting() {
+      await this.run('reportWaiting');
+    }
+
+    @Cron('* * * * * *')
     @WithoutOverlapping({ key: 'payments:report' })
     async reportAlone() {
-      if (!on('reportAlone')) return;
-      record('reportAlone', 'start');
-      await new Promise((r) => setTimeout(r, 1500));
-      record('reportAlone', 'end');
+      await this.run('reportAlone');
+    }
+
+    private async run(job: string) {
+      if (!on(job)) return;
+      record(job, 'start');
+      await new Promise((r) => setTimeout(r, 2500));
+      record(job, 'end');
     }
 
     @Interval(200)

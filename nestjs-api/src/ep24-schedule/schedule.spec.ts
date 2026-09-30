@@ -55,16 +55,20 @@ describe('@nestjs/schedule', () => {
     }
   }, 30000);
 
-  it('C: a 1.5 s job every 500 ms', async () => {
-    for (const job of ['report', 'reportAlone']) {
+  it('C: a 2.5 s job every second', async () => {
+    const labels: Record<string, string> = {
+      report: '@Cron every second',
+      reportWaiting: '@Cron every second, waitForCompletion: true',
+      reportAlone: '@Cron every second with @WithoutOverlapping',
+    };
+    for (const job of Object.keys(labels)) {
       const log: Run[] = [];
       const a = await startApp({ name: 'a', jobs: [job], log });
-      await wait(3000);
+      await wait(5000);
       await a.close();
-      const label = job === 'report' ? '@Interval(500)' : '@Interval(500) with @WithoutOverlapping';
-      console.log(`  Nest, C, ${label}, a job that takes 1.5 s, 3 s: runs started ${count(log, job)}, most at once ${maxConcurrent(log, job)}`);
+      console.log(`  Nest, C, ${labels[job]}, a job that takes 2.5 s, 5 s: runs started ${count(log, job)}, most at once ${maxConcurrent(log, job)}`);
     }
-  }, 30000);
+  }, 60000);
 
   it('D: a slow job beside a 200 ms heartbeat', async () => {
     for (const slow of ['slowAsync', 'slowBusy']) {

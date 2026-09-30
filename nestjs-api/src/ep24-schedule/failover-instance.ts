@@ -7,8 +7,9 @@ import { Redis } from 'ioredis';
 import { RedisLockStore } from './redis-lock-store.js';
 
 /**
- * EPISODE 25, F: one instance as its own process, for the failover probe. A job every second on
- * one instance, lease ttl 3 s, locks in Redis. Prints a line per run so the probe can read it.
+ * EPISODE 25, F: one instance as its own process, for the failover probe. A job that takes 4 s,
+ * started every second on one instance, lease ttl 3 s, locks in Redis. Prints a line per run so
+ * the probe can read it.
  *
  *   node dist/ep24-schedule/failover-instance.js <name> <redisUrl>
  */
@@ -18,8 +19,9 @@ const [name, redisUrl] = process.argv.slice(2);
 class Jobs {
   @Cron('* * * * * *')
   @OnOneInstance({ key: 'payments:settle', ttl: '3s' })
-  settle() {
-    console.log(`RUN ${name} ${Date.now()}`);
+  async settle() {
+    console.log(`START ${name} ${Date.now()}`);
+    await new Promise((r) => setTimeout(r, 4000));
   }
 }
 

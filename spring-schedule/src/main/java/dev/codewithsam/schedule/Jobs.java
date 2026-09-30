@@ -41,11 +41,20 @@ public class Jobs {
         if (on.contains("settleOnce")) record("settleOnce", "start");
     }
 
-    @Scheduled(fixedRate = 500)
+    /** EPISODE 25, F: a 4 s job, started every second on one instance, for the failover probe. */
+    @Scheduled(cron = "* * * * * *")
+    @SchedulerLock(name = "payments:failover", lockAtMostFor = "10s")
+    public void failover() {
+        if (!on.contains("failover")) return;
+        System.out.println("START " + instance + " " + System.currentTimeMillis());
+        sleep(4000);
+    }
+
+    @Scheduled(cron = "* * * * * *")
     public void report() {
         if (!on.contains("report")) return;
         record("report", "start");
-        sleep(1500);
+        sleep(2500);
         record("report", "end");
     }
 

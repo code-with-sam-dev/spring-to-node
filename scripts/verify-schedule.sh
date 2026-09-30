@@ -21,3 +21,9 @@ echo
 cd nestjs-api
 echo "=== Nest: @nestjs/schedule and @nestjs/locks ==="
 npx vitest run --config src/ep24-schedule/vitest.config.ts --reporter=verbose 2>&1 | grep -E '^  Nest'
+echo
+echo "=== Both: kill the instance running the job, as separate processes ==="
+cd ..
+( cd spring-schedule && JAVA_HOME="$HOME/.sdkman/candidates/java/25.0.4-amzn" ./mvnw -q package -DskipTests )
+( cd nestjs-api && npx tsc -p tsconfig.build.json --outDir dist )
+JAVA_HOME="$HOME/.sdkman/candidates/java/25.0.4-amzn" node scripts/failover.mjs
