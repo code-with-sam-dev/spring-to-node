@@ -66,7 +66,8 @@ public final class Ep08Trace {
         @Override
         public void postHandle(HttpServletRequest request, HttpServletResponse response,
                                Object handler, ModelAndView modelAndView) {
-            mark("interceptor:postHandle modelAndView=" + modelAndView);
+            mark("interceptor:postHandle modelAndView=" + modelAndView
+                    + " committed=" + response.isCommitted());
         }
 
         @Override

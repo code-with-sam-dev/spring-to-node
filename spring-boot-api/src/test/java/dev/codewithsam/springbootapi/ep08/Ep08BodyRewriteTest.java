@@ -49,6 +49,7 @@ class Ep08BodyRewriteTest {
     int port;
 
     static String modelAndViewSeenByPostHandle = "not reached";
+    static final java.util.List<String> ORDER = new java.util.concurrent.CopyOnWriteArrayList<>();
 
     @TestConfiguration
     static class Hooks implements WebMvcConfigurer {
@@ -61,7 +62,11 @@ class Ep08BodyRewriteTest {
                 @Override
                 public void postHandle(HttpServletRequest request, HttpServletResponse response,
                                        Object handler, ModelAndView modelAndView) {
+                    ORDER.add("postHandle");
                     modelAndViewSeenByPostHandle = String.valueOf(modelAndView);
+                    // Spring documents postHandle as too late even for a header on
+                    // @ResponseBody methods. Measured here rather than assumed.
+                    response.setHeader("X-Added-By-PostHandle", "yes");
                     if (modelAndView != null) {
                         modelAndView.addObject("meta", Map.of("added", "by postHandle"));
                     }
@@ -88,6 +93,7 @@ class Ep08BodyRewriteTest {
         public Object beforeBodyWrite(Object body, MethodParameter returnType, MediaType contentType,
                                       Class<? extends HttpMessageConverter<?>> converterType,
                                       ServerHttpRequest request, ServerHttpResponse response) {
+            ORDER.add("ResponseBodyAdvice.beforeBodyWrite");
             var envelope = new LinkedHashMap<String, Object>();
             envelope.put("data", body);
             envelope.put("meta", Map.of("path", "GET " + request.getURI().getPath()));
@@ -103,7 +109,10 @@ class Ep08BodyRewriteTest {
 
         System.out.println("=== Spring, rewriting the body ===");
         System.out.println("what postHandle was handed: ModelAndView=" + modelAndViewSeenByPostHandle);
+        System.out.println("what ran first:             " + String.join(" -> ", ORDER));
         System.out.println("what the client received:   " + res.body());
+        System.out.println("header set in postHandle:   X-Added-By-PostHandle="
+                + res.headers().firstValue("X-Added-By-PostHandle").orElse("absent"));
 
         assertThat(modelAndViewSeenByPostHandle)
                 .as("postHandle runs, and for an @ResponseBody method it is handed no model at all")
