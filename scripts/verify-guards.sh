@@ -21,3 +21,6 @@ npx vitest run --config src/ep19-guards/vitest.config.ts src/ep19-guards/default
 echo
 echo "=== Nest: APP_GUARD with a @Public() opt-out ==="
 npx vitest run --config src/ep19-guards/vitest.config.ts src/ep19-guards/global.spec.ts --reporter=verbose 2>&1 | grep -E '^  Nest'
+echo
+echo "=== Nest: @Roles with a RolesGuard, through the route and directly ==="
+npx vitest run --config src/ep19-guards/vitest.config.ts src/ep19-guards/roles.spec.ts --reporter=verbose 2>&1 | grep -E '^  Nest'
