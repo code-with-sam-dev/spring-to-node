@@ -33,3 +33,9 @@ npx vitest run --config src/ep16-testing/vitest.probes.config.ts src/ep16-testin
 echo
 echo "=== Vitest: overrideProvider ==="
 npx vitest run --config src/ep16-testing/vitest.probes.config.ts src/ep16-testing/override.spec.ts --reporter=verbose 2>&1 | grep -E '^  controller'
+echo
+echo "=== Vitest: a stub and a spy defined once, under each reset setting ==="
+for mode in none clearMocks mockReset restoreMocks; do
+  echo "  -- $mode"
+  npx vitest run --config src/ep16-testing/vitest.$mode.config.ts --reporter=verbose 2>&1 | grep -E 'test: '
+done
