@@ -8,6 +8,8 @@ import mongoose, { Schema } from 'mongoose';
  *   C  the same with an atomic $inc
  *   D  a min: 0 validator: save() against updateOne(), and updateOne with runValidators
  *   E  casting: amount "42", amount "abc", and a field the schema does not declare
+ *   F  $inc of -500 on a balance of 100, with runValidators: true
+ *   G  the guard in the filter: $inc only where balance >= 500
  *
  * The Spring half is Ep15MongoTest. Collections ep15_*, dropped at the end.
  */
@@ -96,6 +98,23 @@ await race('B: the same, optimisticConcurrency: true', GuardedAccount);
   const extra = await Account.create(body('{"owner":"sam","balance":10,"currency":"GBP"}'));
   const raw = await mongoose.connection.collection('ep15_accounts').findOne({ _id: extra._id });
   console.log(`  undeclared field currency: stored = ${'currency' in raw!}, error = none`);
+}
+
+/* F, G */
+{
+  await Account.deleteMany({});
+  const { _id } = await Account.create({ owner: 'sam', balance: 100 });
+  console.log('\n=== F: $inc of -500, runValidators: true ===');
+  try {
+    await Account.updateOne({ _id }, { $inc: { balance: -500 } }, { runValidators: true });
+    console.log(`  updateOne($inc, runValidators: true): balance now ${(await Account.findById(_id))!.balance}`);
+  } catch (e) {
+    console.log(`  updateOne($inc, runValidators: true): ${(e as Error).name}`);
+  }
+  await Account.updateOne({ _id }, { balance: 100 });
+  console.log('\n=== G: the guard in the filter, balance >= 500 ===');
+  const guarded = await Account.updateOne({ _id, balance: { $gte: 500 } }, { $inc: { balance: -500 } });
+  console.log(`  matched: ${guarded.matchedCount}, modified: ${guarded.modifiedCount}, balance now ${(await Account.findById(_id))!.balance}`);
 }
 
 await mongoose.connection.dropCollection('ep15_accounts');
