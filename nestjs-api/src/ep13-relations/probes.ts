@@ -87,5 +87,12 @@ console.log(`  queries sent: ${statements.length}`);
 for (const s of statements) console.log(`    ${short(s)}`);
 console.log(`  orders returned: ${page.map((o) => o.reference).join(', ')}; lines: ${page.reduce((n, o) => n + o.lines.length, 0)}`);
 
+/* D: what a plain LIMIT on the joined rows returns, for contrast with C. */
+console.log('\n=== D: a plain LIMIT 5 OFFSET 5 on the joined rows ===');
+const naive = await ds.query(
+  'SELECT o.reference, l.sku FROM ep13_orders o JOIN ep13_order_lines l ON l."orderId" = o.id ORDER BY o.id, l.id LIMIT 5 OFFSET 5');
+console.log(`  rows: ${naive.map((r: { reference: string; sku: string }) => `${r.reference}/${r.sku}`).join(', ')}`);
+console.log(`  distinct orders in the page: ${new Set(naive.map((r: { reference: string }) => r.reference)).size}`);
+
 await ds.query('DROP TABLE IF EXISTS ep13_order_lines, ep13_orders CASCADE');
 await ds.destroy();
