@@ -23,6 +23,10 @@ echo "=== NestJS: where each of the five hooks actually runs ==="
   && node dist/ep08-middleware/order.js )
 echo
 
+echo "=== NestJS: what next() does around a handler that throws ==="
+( cd nestjs-api && node dist/ep08-middleware/next-is-not-dofilter.js )
+echo
+
 echo "=== NestJS: which hook can still see the exception ==="
 ( cd nestjs-api && node dist/ep08-middleware/exception-visibility.js )
 echo

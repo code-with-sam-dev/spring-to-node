@@ -8,17 +8,20 @@ import { Observable, catchError, throwError } from 'rxjs';
 import type { NextFunction, Request, Response } from 'express';
 
 /**
- * THE ONE THAT DECIDES WHICH HOOK YOU REACCH FOR.
+ * THE ONE THAT DECIDES WHICH HOOK YOU REACH FOR.
  *
  * A Spring developer's instinct for cross cutting error work is a servlet
  * Filter: wrap chain.doFilter in a try/catch and you have seen everything
  * downstream. That instinct does not survive the move, and the reason is
  * structural rather than stylistic.
  *
- * Nest middleware IS Express middleware. It sits OUTSIDE the Nest pipeline, so
- * Nest's own exception layer has already dealt with the throw before control
- * ever comes back. A try/catch around next() catches nothing at all, because
- * next() returns immediately and the handler runs later.
+ * Measured in next-is-not-dofilter.ts: the handler runs INSIDE next() and
+ * throws, and next() still returns normally, with the response not yet sent.
+ * Nest catches the handler's exception itself, in its own route handling, and
+ * writes the 500 afterwards. The exception never travels back through next(),
+ * so a try/catch around it, awaited or not, catches nothing. (An earlier
+ * version of this comment said next() returns before the handler runs. It
+ * does not, for a synchronous handler.)
  *
  * What the middleware CAN still see is the finished response. So it learns THAT
  * the request failed, and never WHY.
