@@ -17,19 +17,19 @@ echo
 
 cd nestjs-api
 echo "=== Vitest: decorator metadata ==="
-npx vitest run src/ep16-testing/metadata.spec.ts --reporter=verbose 2>&1 | grep -E '^  design'
+npx vitest run --config src/ep16-testing/vitest.probes.config.ts src/ep16-testing/metadata.spec.ts --reporter=verbose 2>&1 | grep -E '^  design'
 echo
 echo "=== Vitest: a shared mock across two tests, default config ==="
-npx vitest run src/ep16-testing/mock-leak.spec.ts --reporter=verbose 2>&1 | grep -E 'calls so far'
+npx vitest run --config src/ep16-testing/vitest.probes.config.ts src/ep16-testing/mock-leak.spec.ts --reporter=verbose 2>&1 | grep -E 'calls so far'
 echo
 echo "=== Vitest: the same, clearMocks: true ==="
 npx vitest run --config src/ep16-testing/vitest.clear-mocks.config.ts --reporter=verbose 2>&1 | grep -E 'calls so far'
 echo
 echo "=== Vitest: a vi.mock factory that reads a test-file variable ==="
-npx vitest run src/ep16-testing/hoist.spec.ts 2>&1 | grep -E 'ReferenceError|getHello' | head -1 || true
+npx vitest run --config src/ep16-testing/vitest.probes.config.ts src/ep16-testing/hoist.spec.ts 2>&1 | grep -E 'ReferenceError|getHello' | head -1 || true
 echo
 echo "=== Vitest: an unused stub ==="
-npx vitest run src/ep16-testing/unused-stub.spec.ts --reporter=verbose 2>&1 | grep -E '^  unused'
+npx vitest run --config src/ep16-testing/vitest.probes.config.ts src/ep16-testing/unused-stub.spec.ts --reporter=verbose 2>&1 | grep -E '^  unused'
 echo
 echo "=== Vitest: overrideProvider ==="
-npx vitest run src/ep16-testing/override.spec.ts --reporter=verbose 2>&1 | grep -E '^  controller'
+npx vitest run --config src/ep16-testing/vitest.probes.config.ts src/ep16-testing/override.spec.ts --reporter=verbose 2>&1 | grep -E '^  controller'
