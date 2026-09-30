@@ -8,6 +8,7 @@ cd "$(dirname "$0")/.."
 echo "=== versions ==="
 echo "node                $(node -v)"
 echo "@nestjs/http-client $(node -p "require('./nestjs-api/node_modules/@nestjs/http-client/package.json').version")"
+echo "@nestjs/resilience  $(node -p "require('./nestjs-api/node_modules/@nestjs/resilience/package.json').version")"
 echo "opossum             $(node -p "require('./nestjs-api/node_modules/opossum/package.json').version")"
 echo "resilience4j        2.4.0"
 date -u +"run                 %Y-%m-%dT%H:%M:%SZ"
@@ -23,3 +24,6 @@ npx vitest run --config src/ep22-resilience/vitest.config.ts src/ep22-resilience
 echo
 echo "=== Nest: an opossum circuit breaker ==="
 npx vitest run --config src/ep22-resilience/vitest.config.ts src/ep22-resilience/breaker.spec.ts --reporter=verbose 2>&1 | grep -E '^  Nest'
+echo
+echo "=== Nest: @nestjs/resilience on the handlers ==="
+npx vitest run --config src/ep22-resilience/vitest.config.ts src/ep22-resilience/resilience.spec.ts --reporter=verbose 2>&1 | grep -E '^  Nest'

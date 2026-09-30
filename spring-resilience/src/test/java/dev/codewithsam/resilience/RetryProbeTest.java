@@ -36,6 +36,15 @@ class RetryProbeTest {
     }
 
     @Autowired PaymentsGateway gateway;
+    @Autowired PaymentsFacade facade;
+
+    @Test
+    void nestedAndSelf() {
+        String o = outcome(facade::status);
+        System.out.println("  Spring, E, @Retryable(maxRetries = 2) over a @Retryable(maxRetries = 2) method: " + o + ", hits " + downstream.hits("/nested"));
+        String s = outcome(gateway::selfViaThis);
+        System.out.println("  Spring, D, a @Retryable method called through this: " + s + ", hits " + downstream.hits("/self"));
+    }
 
     static String outcome(Runnable call) {
         try {

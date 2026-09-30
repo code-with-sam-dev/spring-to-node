@@ -26,6 +26,20 @@ public class PaymentsGateway {
     }
 
     @Retryable(maxRetries = 2, delay = 200, multiplier = 2, jitter = 50)
+    public String nested() {
+        return http.get().uri("/nested").retrieve().body(String.class);
+    }
+
+    @Retryable(maxRetries = 2, delay = 200, multiplier = 2, jitter = 50)
+    public String self() {
+        return http.get().uri("/self").retrieve().body(String.class);
+    }
+
+    public String selfViaThis() {
+        return this.self();
+    }
+
+    @Retryable(maxRetries = 2, delay = 200, multiplier = 2, jitter = 50)
     public String charge() {
         return http.post().uri("/charge").body("{\"amount\":100}").retrieve().body(String.class);
     }
