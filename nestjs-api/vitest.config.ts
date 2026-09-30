@@ -10,6 +10,6 @@ export default defineConfig({
     root: './',
     include: ['**/*.spec.ts'],
     // Episode 17's probes demonstrate failures on purpose; verify-testing.sh runs them.
-    exclude: ['**/node_modules/**', 'src/ep16-testing/**', 'src/ep20-throttle/**', 'src/ep21-http/**', 'src/ep22-resilience/**', 'src/ep23-cache/**'],
+    exclude: ['**/node_modules/**', 'src/ep16-testing/**', 'src/ep20-throttle/**', 'src/ep21-http/**', 'src/ep22-resilience/**', 'src/ep23-cache/**', 'src/ep24-schedule/**'],
   },
 });
