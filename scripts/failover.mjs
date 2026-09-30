@@ -15,7 +15,7 @@ const stacks = {
     `--instance=${name}`, '--jobs=failover', `--spring.data.redis.port=${port}`, '--logging.level.root=OFF', '--spring.main.banner-mode=off']),
 };
 
-async function probe(stack, label) {
+async function probe(stack, label, run) {
   const starts = [];
   const procs = Object.fromEntries(['a', 'b'].map((name) => {
     const p = stacks[stack](name);
@@ -46,13 +46,15 @@ async function probe(stack, label) {
     await wait(50);
   }
   procs[other].kill('SIGKILL');
-  console.log(`  ${stack === 'nest' ? 'Nest' : 'Spring'}, F, ${label}: killed the running instance 1 s into its run; the other instance started the job ${first ? ((first.at - killedAt) / 1000).toFixed(1) + ' s later' : 'not within 20 s'}`);
+  console.log(`  ${stack === 'nest' ? 'Nest' : 'Spring'}, F, run ${run}, ${label}: killed the running instance 1 s into its run; the other instance started the job ${first ? ((first.at - killedAt) / 1000).toFixed(1) + ' s later' : 'not within 20 s'}`);
   execSync(`docker exec ${redisId} redis-cli FLUSHALL`);
 }
 
 try {
-  await probe('nest', '@OnOneInstance, lease ttl 3 s, a 4 s job every second');
-  await probe('spring', '@SchedulerLock, lockAtMostFor 10 s, a 4 s job every second');
+  for (const run of [1, 2]) {
+    await probe('nest', '@OnOneInstance, lease ttl 3 s, a 4 s job every second', run);
+    await probe('spring', '@SchedulerLock, lockAtMostFor 10 s, a 4 s job every second', run);
+  }
 } finally {
   execSync(`docker stop ${redisId}`);
 }
