@@ -86,6 +86,18 @@ class Ep13RelationsTest {
         System.out.println("  queries sent: " + stats.getPrepareStatementCount());
         System.out.println("  orders returned: " + String.join(", ", listPage));
 
+        System.out.println("=== Spring, C5: page 2 of 5, @EntityGraph, returning Page ===");
+        stats.clear();
+        List<String> graphPage = tx.execute(s -> orders.findPageByReferenceStartingWith("ORD", PageRequest.of(1, 5, org.springframework.data.domain.Sort.by("id"))).stream().map(Ep13Order::getReference).toList());
+        System.out.println("  queries sent: " + stats.getPrepareStatementCount());
+        System.out.println("  orders returned: " + String.join(", ", graphPage));
+
+        System.out.println("=== Spring, C6: page 2 of 5, @EntityGraph, returning List ===");
+        stats.clear();
+        List<String> graphList = tx.execute(s -> orders.findListByReferenceStartingWith("ORD", PageRequest.of(1, 5, org.springframework.data.domain.Sort.by("id"))).stream().map(Ep13Order::getReference).toList());
+        System.out.println("  queries sent: " + stats.getPrepareStatementCount());
+        System.out.println("  orders returned: " + String.join(", ", graphList));
+
         assertThat(counted).isEqualTo(60);
     }
 }

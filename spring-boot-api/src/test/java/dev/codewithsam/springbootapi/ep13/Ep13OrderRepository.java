@@ -2,6 +2,7 @@ package dev.codewithsam.springbootapi.ep13;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -21,4 +22,10 @@ public interface Ep13OrderRepository extends JpaRepository<Ep13Order, Long> {
     @Query(value = "select distinct o from Ep13Order o join fetch o.lines",
             countQuery = "select count(o) from Ep13Order o")
     Page<Ep13Order> findPageWithLinesAsPage(Pageable page);
+
+    @EntityGraph(attributePaths = "lines")
+    Page<Ep13Order> findPageByReferenceStartingWith(String prefix, Pageable page);
+
+    @EntityGraph(attributePaths = "lines")
+    List<Ep13Order> findListByReferenceStartingWith(String prefix, Pageable page);
 }
