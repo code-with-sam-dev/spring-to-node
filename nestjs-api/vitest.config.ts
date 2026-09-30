@@ -9,5 +9,7 @@ export default defineConfig({
     globals: true,
     root: './',
     include: ['**/*.spec.ts'],
+    // Episode 17's probes demonstrate failures on purpose; verify-testing.sh runs them.
+    exclude: ['**/node_modules/**', 'src/ep16-testing/**'],
   },
 });
