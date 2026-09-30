@@ -21,7 +21,7 @@ import { fileURLToPath } from 'node:url';
 const PORT = 3992;
 
 class InsufficientFunds extends Error {
-  constructor(readonly shortfall: number) {
+  constructor(readonly shortfall: number, readonly currency: string) {
     super(`short by ${shortfall}`);
   }
 }
@@ -40,7 +40,7 @@ class ThrowController {
 
   @Get('domain')
   domain() {
-    throw new InsufficientFunds(250);
+    throw new InsufficientFunds(250, 'USD');
   }
 }
 

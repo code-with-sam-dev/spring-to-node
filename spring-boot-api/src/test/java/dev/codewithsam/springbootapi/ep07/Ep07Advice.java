@@ -6,7 +6,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.util.Map;
 
 /**
  * The Spring half of the filter comparison.
@@ -30,13 +29,12 @@ import java.util.Map;
 @RestControllerAdvice
 class Ep07Advice {
 
+    record Body(String error, long shortfallInMinorUnits, String currency) {}
+
     @ExceptionHandler(Ep07ThrowController.InsufficientFunds.class)
-    ResponseEntity<Map<String, Object>> onInsufficientFunds(
-            Ep07ThrowController.InsufficientFunds ex) {
+    ResponseEntity<Body> onInsufficientFunds(Ep07ThrowController.InsufficientFunds ex) {
         // 409: the account's current state prevents it. Not 402, still reserved.
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
-                "error", "insufficient_funds",
-                "shortfallInMinorUnits", ex.shortfall(),
-                "currency", "USD"));
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new Body("insufficient_funds", ex.shortfall(), "USD"));
     }
 }
