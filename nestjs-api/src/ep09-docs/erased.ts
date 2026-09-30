@@ -72,5 +72,14 @@ if (properties.length !== 0) {
     + 'without the CLI plugin. Re-measure before the episode says otherwise.',
   );
 }
-console.log('\nasserted: with no plugin and no ApiProperty, the schema is EMPTY');
-console.log('the types were erased by the compiler, and the document is built at runtime');
+// Probe A from the 2026-09-30 consult: is the type information really gone?
+// These properties carry class-validator decorators, so emitDecoratorMetadata
+// still records a design:type for each one.
+console.log('\nwhat runtime reflection still knows about the same class:');
+for (const p of ['amountInMinorUnits', 'currency', 'idempotencyKey']) {
+  const t = Reflect.getMetadata('design:type', CreatePaymentDto.prototype, p) as { name?: string } | undefined;
+  console.log(`  ${p.padEnd(19)} design:type = ${t?.name ?? 'nothing'}`);
+}
+console.log('\nasserted: with no plugin and no ApiProperty, the schema is EMPTY,');
+console.log('even though runtime reflection still knows each decorated property\'s type:');
+console.log('@nestjs/swagger builds schemas from its own ApiProperty metadata, and none exists');

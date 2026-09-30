@@ -19,7 +19,7 @@ echo
 
 echo "=== NestJS: what a typed, validated DTO documents by itself ==="
 ( cd nestjs-api \
-  && npx tsc --ignoreConfig src/ep09-docs/erased.ts src/ep09-docs/annotated.ts \
+  && npx tsc --ignoreConfig src/ep09-docs/erased.ts src/ep09-docs/annotated.ts src/ep09-docs/drift.ts \
        --outDir dist/ep09-docs --experimentalDecorators --emitDecoratorMetadata \
        --module nodenext --moduleResolution nodenext --target es2023 \
        --skipLibCheck --types node \
@@ -30,15 +30,34 @@ echo "=== NestJS: the same DTO with ApiProperty written out by hand ==="
 ( cd nestjs-api && node dist/ep09-docs/annotated.js | tail -6 )
 echo
 
+echo "=== NestJS: hand-written ApiProperty that disagrees with the validator ==="
+( cd nestjs-api && node dist/ep09-docs/drift.js )
+echo
+
 echo "=== NestJS: the CLI plugin, at its default options ==="
 ( cd nestjs-api && rm -rf dist/ep09-plugin && node tools/build-with-plugin.mjs \
   && node dist/ep09-plugin/run.js )
+echo
+
+echo "=== NestJS: the plugin with classValidatorShim off (where the constraints come from) ==="
+( cd nestjs-api && rm -rf dist/ep09-shim \
+  && OUT_DIR=dist/ep09-shim PLUGIN_OPTIONS='{"classValidatorShim":false}' node tools/build-with-plugin.mjs \
+  && node dist/ep09-shim/run.js )
+echo
+
+echo "=== NestJS: widening the filename filter ==="
+( cd nestjs-api && rm -rf dist/ep09-suffix \
+  && OUT_DIR=dist/ep09-suffix PLUGIN_OPTIONS='{"dtoFileNameSuffix":[".dto.ts",".entity.ts",".ts"]}' node tools/build-with-plugin.mjs 2>&1 | grep -o 'Skipping dtoFileNameSuffix option.*behaviour\.' || true )
+( cd nestjs-api && rm -rf dist/ep09-suffix \
+  && OUT_DIR=dist/ep09-suffix PLUGIN_OPTIONS='{"dtoFileNameSuffix":[".dto.ts",".entity.ts","-receipt.ts"]}' node tools/build-with-plugin.mjs \
+  && node dist/ep09-suffix/run.js | sed -n 3,4p )
 echo
 
 echo "=== Spring: the same three fields, and a schema name collision ==="
 if docker compose ps postgres 2>/dev/null | grep -q 'Up\|running'; then
   ./scripts/test-spring.sh Ep09DocsTest 2>&1 \
     | grep -E '=== Spring|properties documented|required documented|what the document|^  \{"type"|^  payments\.|^  ep09\.'
+  ./scripts/test-spring.sh Ep09FqnTest 2>&1 | grep -E '=== Spring|CreatePaymentRequest  currency'
 else
   echo "  SKIPPED: the database is not up. Run: docker compose up -d" >&2
 fi

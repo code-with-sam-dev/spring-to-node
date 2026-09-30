@@ -22,13 +22,15 @@ const options = {
   moduleResolution: ts.ModuleResolutionKind.NodeNext,
   target: ts.ScriptTarget.ES2023,
   skipLibCheck: true,
-  outDir: 'dist/ep09-plugin',
+  outDir: process.env.OUT_DIR ?? 'dist/ep09-plugin',
   rootDir: 'src/ep09-docs/plugin-demo',
   types: ['node'],
 };
 const program = ts.createProgram(files, options);
 const result = program.emit(undefined, undefined, undefined, undefined, {
-  before: [before({ introspectComments: false }, program)],
+  // PLUGIN_OPTIONS lets a probe change ONE option (classValidatorShim,
+  // dtoFileNameSuffix) against the same demo. Unset, the defaults apply.
+  before: [before({ introspectComments: false, ...JSON.parse(process.env.PLUGIN_OPTIONS ?? '{}') }, program)],
 });
 const diags = ts.getPreEmitDiagnostics(program)
   .concat(result.diagnostics)

@@ -56,6 +56,12 @@ console.log(`  create-receipt.ts      CreateReceiptDto  ${receipt.length} of 2 d
 console.log('\nthe payment schema, built from nothing but the class-validator decorators:');
 console.log(JSON.stringify(doc.components?.schemas?.['CreatePaymentDto'], null, 2));
 
+// A probe run changes one plugin option; print what it produced and stop, since
+// the assertions below pin the DEFAULT behaviour.
+if (process.env.PLUGIN_OPTIONS) {
+  console.log(`\nprobe: plugin options ${process.env.PLUGIN_OPTIONS}`);
+  process.exit(0);
+}
 if (payment.length !== 3) {
   throw new Error(`CLAIM FAILED: the plugin did not document the .dto.ts class: ${payment.length}`);
 }
