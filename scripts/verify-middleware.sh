@@ -45,7 +45,7 @@ echo "=== Spring: the same two questions, on a real servlet container ==="
 if docker compose ps postgres 2>/dev/null | grep -q 'Up\|running'; then
   ./scripts/test-spring.sh Ep08OrderTest 2>&1 | grep -E '=== Spring|^  |^status|^body'
   echo
-  ./scripts/test-spring.sh Ep08BodyRewriteTest 2>&1 | grep -E '=== Spring|^what '
+  ./scripts/test-spring.sh Ep08BodyRewriteTest 2>&1 | grep -E '=== Spring|^what |^header set'
 else
   echo "  SKIPPED: the database is not up. Run: docker compose up -d" >&2
 fi
