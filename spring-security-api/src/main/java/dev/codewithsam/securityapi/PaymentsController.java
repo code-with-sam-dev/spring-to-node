@@ -12,6 +12,11 @@ class PaymentsController {
         return "payments";
     }
 
+    @GetMapping("/health")
+    String health() {
+        return "ok";
+    }
+
     @GetMapping("/refunds")
     String refunds() {
         return "refunds";
