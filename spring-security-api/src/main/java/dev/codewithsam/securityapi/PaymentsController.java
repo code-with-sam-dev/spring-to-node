@@ -7,6 +7,17 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 class PaymentsController {
 
+    private final RefundService refunds;
+
+    PaymentsController(RefundService refunds) {
+        this.refunds = refunds;
+    }
+
+    @GetMapping("/refunds/approve")
+    String approve() {
+        return refunds.approve();
+    }
+
     @GetMapping("/payments")
     String payments() {
         return "payments";

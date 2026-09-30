@@ -4,6 +4,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
@@ -21,5 +23,12 @@ class SecurityConfig {
                 .anyRequest().authenticated())
             .httpBasic(basic -> { });
         return http.build();
+    }
+
+    @Bean
+    InMemoryUserDetailsManager users() {
+        return new InMemoryUserDetailsManager(
+                User.withUsername("sam").password("{noop}secret").roles("USER").build(),
+                User.withUsername("ada").password("{noop}secret").roles("USER", "ADMIN").build());
     }
 }

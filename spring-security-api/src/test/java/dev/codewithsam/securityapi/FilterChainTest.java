@@ -13,7 +13,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 /**
  * EPISODE 20, C: with the explicit chain. Anonymous, wrong password, right password.
  */
-@SpringBootTest(properties = {"spring.security.user.name=sam", "spring.security.user.password=secret"})
+@SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("chain")
 class FilterChainTest {
