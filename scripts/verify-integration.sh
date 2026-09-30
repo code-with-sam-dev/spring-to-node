@@ -15,7 +15,7 @@ date -u +"run      %Y-%m-%dT%H:%M:%SZ"
 echo
 
 echo "=== Spring: @DataJpaTest, and @SpringBootTest with and without @Transactional ==="
-./scripts/test-spring.sh 'Ep17*Test' 2>&1 | grep -E '^  Spring'
+./scripts/test-spring.sh 'Ep17DataJpaTest,Ep17HttpTest,Ep17RequestTest' 2>&1 | grep -E '^  Spring'
 echo
 
 cd nestjs-api
@@ -27,3 +27,6 @@ npx vitest run --config src/ep17-integration/vitest.config.ts src/ep17-integrati
 echo
 echo "=== Nest: TRUNCATE per test, and a rolled-back transaction per test ==="
 npx vitest run --config src/ep17-integration/vitest.config.ts src/ep17-integration/cleanup.spec.ts --reporter=verbose 2>&1 | grep -E '^  Nest'
+echo
+echo "=== Nest: a rolled-back test transaction around a supertest request ==="
+npx vitest run --config src/ep17-integration/vitest.config.ts src/ep17-integration/request.spec.ts --reporter=verbose 2>&1 | grep -E '^  Nest'
