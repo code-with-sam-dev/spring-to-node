@@ -19,6 +19,9 @@ class ProxyTest {
                 String spoof = Probe.burst(app, i -> "9.9.9." + i + ", 203.0.113.99", 6);
                 System.out.println("  Spring, B, forward-headers-strategy " + strategy + ", client one x3: " + one + "; client two, first request: " + two);
                 System.out.println("  Spring, B, forward-headers-strategy " + strategy + ", a client writing its own X-Forwarded-For, six requests: " + spoof);
+                for (String xff : new String[] {"attacker", "attacker, 203.0.113.7"}) {
+                    System.out.println("  Spring, B, forward-headers-strategy " + strategy + ", X-Forwarded-For \"" + xff + "\", the key: " + Probe.send(app, "GET", "/whoami", xff).body());
+                }
             }
         }
     }

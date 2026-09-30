@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { Controller, Get, Module, Post } from '@nestjs/common';
+import { Controller, Get, Injectable, Module, Post, Req } from '@nestjs/common';
 import { APP_GUARD, NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { SkipThrottle, Throttle, ThrottlerGuard, ThrottlerModule, ThrottlerStorage } from '@nestjs/throttler';
@@ -21,6 +21,12 @@ class PaymentsController {
     return 'ok';
   }
 
+  @SkipThrottle()
+  @Get('whoami')
+  whoami(@Req() req: { ip: string }) {
+    return req.ip;
+  }
+
   @Throttle({ default: { limit: 1, ttl: 60000 } })
   @Post('login')
   login() {
@@ -28,11 +34,21 @@ class PaymentsController {
   }
 }
 
-export async function startApp(opts: { trustProxy?: boolean | number; storage?: ThrottlerStorage } = {}) {
+/** Keyed by the signed-in user instead of the address. The x-user header stands in for a verified identity. */
+@Injectable()
+class UserThrottlerGuard extends ThrottlerGuard {
+  protected async getTracker(req: Record<string, any>): Promise<string> {
+    return req.headers['x-user'] ?? req.ip;
+  }
+}
+
+export async function startApp(
+  opts: { trustProxy?: boolean | number | string; storage?: ThrottlerStorage; ttl?: number; byUser?: boolean } = {},
+) {
   @Module({
-    imports: [ThrottlerModule.forRoot({ throttlers: [{ ttl: 60000, limit: 3 }], storage: opts.storage })],
+    imports: [ThrottlerModule.forRoot({ throttlers: [{ ttl: opts.ttl ?? 60000, limit: 3 }], storage: opts.storage })],
     controllers: [PaymentsController],
-    providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
+    providers: [{ provide: APP_GUARD, useClass: opts.byUser ? UserThrottlerGuard : ThrottlerGuard }],
   })
   class RateLimitedModule {}
 

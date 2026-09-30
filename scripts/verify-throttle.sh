@@ -26,3 +26,12 @@ npx vitest run --config src/ep20-throttle/vitest.config.ts src/ep20-throttle/pro
 echo
 echo "=== Nest: two instances, in memory and in Redis ==="
 npx vitest run --config src/ep20-throttle/vitest.config.ts src/ep20-throttle/instances.spec.ts --reporter=verbose 2>&1 | grep -E '^  Nest'
+echo
+echo "=== Nest: two signed-in users behind one address ==="
+npx vitest run --config src/ep20-throttle/vitest.config.ts src/ep20-throttle/identity.spec.ts --reporter=verbose 2>&1 | grep -E '^  Nest'
+echo
+echo "=== Nest: a restart, in memory and in Redis ==="
+npx vitest run --config src/ep20-throttle/vitest.config.ts src/ep20-throttle/restart.spec.ts --reporter=verbose 2>&1 | grep -E '^  Nest'
+echo
+echo "=== Nest: the edge of the window ==="
+npx vitest run --config src/ep20-throttle/vitest.config.ts src/ep20-throttle/boundary.spec.ts --reporter=verbose 2>&1 | grep -E '^  Nest'

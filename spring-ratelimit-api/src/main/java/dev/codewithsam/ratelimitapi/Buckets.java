@@ -21,23 +21,25 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 class Buckets {
 
-    static BucketConfiguration perMinute(long requests) {
+    static BucketConfiguration perWindow(long requests, Duration window) {
         return BucketConfiguration.builder()
-            .addLimit(limit -> limit.capacity(requests).refillIntervally(requests, Duration.ofMinutes(1)))
+            .addLimit(limit -> limit.capacity(requests).refillIntervally(requests, window))
             .build();
     }
 
     @Bean
-    Function<String, Bucket> bucketFor(@Value("${ratelimit.redis-url:}") String redisUrl) {
+    Function<String, Bucket> bucketFor(@Value("${ratelimit.redis-url:}") String redisUrl,
+                                       @Value("${ratelimit.window-ms:60000}") long windowMs) {
+        Duration window = Duration.ofMillis(windowMs);
         if (redisUrl.isEmpty()) {
             Map<String, Bucket> local = new ConcurrentHashMap<>();
             return key -> local.computeIfAbsent(key, k -> Bucket.builder()
-                .addLimit(limit -> limit.capacity(limitFor(k)).refillIntervally(limitFor(k), Duration.ofMinutes(1)))
+                .addLimit(limit -> limit.capacity(limitFor(k)).refillIntervally(limitFor(k), window))
                 .build());
         }
         ProxyManager<String> redis = Bucket4jLettuce.casBasedBuilder(RedisClient.create(redisUrl)).build()
             .withMapper((String key) -> key.getBytes(StandardCharsets.UTF_8));
-        return key -> redis.getProxy(key, () -> perMinute(limitFor(key)));
+        return key -> redis.getProxy(key, () -> perWindow(limitFor(key), window));
     }
 
     static long limitFor(String key) {
