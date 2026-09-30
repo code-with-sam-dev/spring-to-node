@@ -1,6 +1,6 @@
 import { HttpClient, HttpClientModule } from '@nestjs/http-client';
 import { Test } from '@nestjs/testing';
-import { closedPort, startDownstream } from './downstream';
+import { closedPort, startDownstream } from './downstream.js';
 
 /**
  * EPISODE 22 PROBES, @nestjs/http-client: the fetch-based client the Nest docs now describe, with
@@ -60,13 +60,13 @@ describe('@nestjs/http-client', () => {
     console.log(`  Nest http-client, C, GET /flaky, first answer 500: resolved ${flaky.status}, hits ${downstream.hits('/flaky/http-client')}, after ${seconds(started)} s`);
     const beforePost = downstream.hits('/fail');
     try {
-      await http.post(`${downstream.url}/fail`, { amount: 100 });
+      await http.post(`${downstream.url}/fail`, { json: { amount: 100 } });
     } catch (e) {
       console.log(`  Nest http-client, C, POST /fail: ${describeError(e)}, hits ${downstream.hits('/fail') - beforePost}`);
     }
     const beforePut = downstream.hits('/fail');
     try {
-      await http.put(`${downstream.url}/fail`, { amount: 100 });
+      await http.put(`${downstream.url}/fail`, { json: { amount: 100 } });
     } catch (e) {
       console.log(`  Nest http-client, C, PUT /fail: ${describeError(e)}, hits ${downstream.hits('/fail') - beforePut}`);
     }

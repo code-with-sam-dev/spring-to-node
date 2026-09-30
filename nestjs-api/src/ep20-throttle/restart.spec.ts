@@ -1,7 +1,7 @@
-import Redis from 'ioredis';
+import { Redis } from 'ioredis';
 import { GenericContainer, StartedTestContainer } from 'testcontainers';
-import { startApp, urlOf } from './app';
-import { RedisThrottlerStorage } from './redis-storage';
+import { startApp, urlOf } from './app.js';
+import { RedisThrottlerStorage } from './redis-storage.js';
 
 /** EPISODE 21, F: use the three, restart the instance, ask again. In memory, then in Redis. */
 describe('F: a restart', () => {

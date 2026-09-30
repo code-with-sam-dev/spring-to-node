@@ -1,5 +1,5 @@
 import { NestExpressApplication } from '@nestjs/platform-express';
-import { startApp, urlOf } from './app';
+import { startApp, urlOf } from './app.js';
 
 /** EPISODE 21, A: five requests against a limit of three a minute, and what the refusal carries. */
 describe('A: the limit', () => {

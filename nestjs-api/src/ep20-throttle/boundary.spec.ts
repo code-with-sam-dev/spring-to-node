@@ -1,4 +1,4 @@
-import { startApp, urlOf } from './app';
+import { startApp, urlOf } from './app.js';
 
 /**
  * EPISODE 21, G: the edge of the window. Three a TWO SECOND window, so the probe runs in seconds:

@@ -1,5 +1,5 @@
 import { NestExpressApplication } from '@nestjs/platform-express';
-import { startApp, urlOf } from './app';
+import { startApp, urlOf } from './app.js';
 
 /**
  * EPISODE 21, B: behind a proxy. Every request reaches the app from the proxy's address,

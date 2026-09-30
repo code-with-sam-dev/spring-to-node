@@ -1,6 +1,6 @@
 import { HttpClient, HttpClientModule } from '@nestjs/http-client';
 import { Test } from '@nestjs/testing';
-import { startDownstream } from './downstream';
+import { startDownstream } from './downstream.js';
 
 /** EPISODE 23 PROBES, Nest: @nestjs/http-client's default retries, twenty callers, and a POST. */
 const clientWith = async (options: Record<string, unknown> = {}) => {
@@ -29,7 +29,7 @@ describe('retries', () => {
 
   it('D: a POST', async () => {
     const http = await clientWith();
-    const o = await outcome(() => http.post(`${downstream.url}/charge`, { amount: 100 }));
+    const o = await outcome(() => http.post(`${downstream.url}/charge`, { json: { amount: 100 } }));
     console.log(`  Nest, D, @nestjs/http-client defaults, POST while down: ${o}, hits ${downstream.hits('/charge')}`);
   });
 

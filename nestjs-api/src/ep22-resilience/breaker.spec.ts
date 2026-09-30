@@ -1,7 +1,7 @@
 import { HttpClient, HttpClientModule } from '@nestjs/http-client';
 import { Test } from '@nestjs/testing';
 import CircuitBreaker from 'opossum';
-import { startDownstream } from './downstream';
+import { startDownstream } from './downstream.js';
 
 /**
  * EPISODE 23 PROBE, Nest: twenty calls in a row through an opossum circuit breaker while the
@@ -19,7 +19,9 @@ describe('circuit breaker', () => {
       resetTimeout: 1000,
     });
     const transitions: string[] = [];
-    for (const event of ['open', 'halfOpen', 'close'] as const) breaker.on(event, () => transitions.push(event));
+    breaker.on('open', () => transitions.push('open'));
+    breaker.on('halfOpen', () => transitions.push('halfOpen'));
+    breaker.on('close', () => transitions.push('close'));
 
     let rejected = 0;
     let rejectedMs = 0;

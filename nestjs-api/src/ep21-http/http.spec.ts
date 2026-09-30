@@ -1,7 +1,7 @@
 import { HttpModule, HttpService } from '@nestjs/axios';
 import { Test } from '@nestjs/testing';
 import { firstValueFrom } from 'rxjs';
-import { closedPort, startDownstream } from './downstream';
+import { closedPort, startDownstream } from './downstream.js';
 
 /**
  * EPISODE 22 PROBES, @nestjs/axios: HttpService against a real downstream server, and Node's

@@ -1,5 +1,5 @@
 import { ThrottlerStorage } from '@nestjs/throttler';
-import Redis from 'ioredis';
+import { Redis } from 'ioredis';
 
 /**
  * EPISODE 21. The counter lives in Redis, so every instance counts the same hits. A fixed window:

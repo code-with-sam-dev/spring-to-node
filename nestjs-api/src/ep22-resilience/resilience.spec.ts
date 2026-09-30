@@ -1,5 +1,5 @@
-import { startApp } from './app';
-import { startDownstream } from './downstream';
+import { startApp } from './app.js';
+import { startDownstream } from './downstream.js';
 
 /**
  * EPISODE 23 PROBES, @nestjs/resilience: a retry on the handler over the HTTP client's own retries,

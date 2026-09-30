@@ -3,8 +3,8 @@ import { Injectable, Module } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { LocksModule, OnOneInstance, WithoutOverlapping } from '@nestjs/locks';
 import { Cron, Interval, ScheduleModule } from '@nestjs/schedule';
-import Redis from 'ioredis';
-import { RedisLockStore } from './redis-lock-store';
+import { Redis } from 'ioredis';
+import { RedisLockStore } from './redis-lock-store.js';
 
 /**
  * EPISODE 25. One application instance with the scheduled jobs a probe asks for, and a shared log

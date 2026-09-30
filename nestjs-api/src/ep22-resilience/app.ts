@@ -37,13 +37,13 @@ export async function startApp(opts: { downstream: string; clientRetry: boolean 
     @Post('charge')
     @Retry({ attempts: 3 })
     async charge() {
-      return (await this.http.post(`${opts.downstream}/charge`, { amount: 100 })).data;
+      return (await this.http.post(`${opts.downstream}/charge`, { json: { amount: 100 } })).data;
     }
 
     @Post('charge-idempotent')
     @Retry({ attempts: 3, idempotent: true })
     async chargeIdempotent() {
-      return (await this.http.post(`${opts.downstream}/charge-idempotent`, { amount: 100 })).data;
+      return (await this.http.post(`${opts.downstream}/charge-idempotent`, { json: { amount: 100 } })).data;
     }
 
     @Get('via-service')

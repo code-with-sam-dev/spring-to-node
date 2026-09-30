@@ -1,5 +1,5 @@
 import { GenericContainer, StartedTestContainer } from 'testcontainers';
-import { startApp } from './app';
+import { startApp } from './app.js';
 
 /**
  * EPISODE 24 PROBES, Nest: a cache entry's lifetime, a stampede when a hot key expires, two

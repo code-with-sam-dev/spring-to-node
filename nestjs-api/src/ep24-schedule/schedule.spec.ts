@@ -1,5 +1,5 @@
 import { GenericContainer, StartedTestContainer } from 'testcontainers';
-import { Run, startApp } from './app';
+import { Run, startApp } from './app.js';
 
 /**
  * EPISODE 25 PROBES, Nest: @nestjs/schedule and @nestjs/locks. Two instances are two application

@@ -1,8 +1,8 @@
-import Redis from 'ioredis';
+import { Redis } from 'ioredis';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { GenericContainer, StartedTestContainer } from 'testcontainers';
-import { startApp, urlOf } from './app';
-import { RedisThrottlerStorage } from './redis-storage';
+import { startApp, urlOf } from './app.js';
+import { RedisThrottlerStorage } from './redis-storage.js';
 
 /**
  * EPISODE 21, C: two instances of the same app behind round robin, six requests from one client.

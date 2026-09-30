@@ -1,5 +1,5 @@
 import { GenericContainer, StartedTestContainer } from 'testcontainers';
-import { startApp } from './app';
+import { startApp } from './app.js';
 
 /** EPISODE 24 PROBES, Nest: @nestjs/cache-manager's CacheInterceptor, in memory and in Redis. */
 const json = async (res: Response) => JSON.stringify(await res.json());

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { LockAcquireResult, LockStore, LocksStorage } from '@nestjs/locks';
-import Redis from 'ioredis';
+import { Redis } from 'ioredis';
 
 /**
  * EPISODE 25. A LockStore on Redis: every operation one Lua script, so it is atomic, with Redis's

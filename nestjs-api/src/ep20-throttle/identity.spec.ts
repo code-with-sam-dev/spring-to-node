@@ -1,4 +1,4 @@
-import { startApp, urlOf } from './app';
+import { startApp, urlOf } from './app.js';
 
 /**
  * EPISODE 21, E: two signed-in users behind one address. Keyed by address, then by user.
