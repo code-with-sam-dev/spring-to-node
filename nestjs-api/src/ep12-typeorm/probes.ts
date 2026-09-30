@@ -62,6 +62,8 @@ class CustomerV2 {
 }
 
 const statements: string[] = [];
+// Long statements are abbreviated with an explicit " ..." so the printed line says it is cut.
+const short = (q: string) => (q.length > 72 ? `${q.slice(0, 64)} ...` : q);
 const logger = {
   logQuery: (q: string) => { statements.push(q.replace(/\s+/g, ' ').trim()); },
   logQueryError: () => {}, logQuerySlow: () => {}, logSchemaBuild: () => {}, logMigration: () => {}, log: () => {},
@@ -108,14 +110,14 @@ console.log(`  BigInt(...) = ${BigInt(bob.balanceInMinorUnits)}`);
 console.log('\n=== E: repository.save() on a new entity, the SQL sent ===');
 statements.length = 0;
 await repo.save({ owner: 'carol', balanceInMinorUnits: '1' });
-for (const s of statements) console.log(`  ${s.slice(0, 140)}`);
+for (const s of statements) console.log(`  ${short(s)}`);
 statements.length = 0;
 const carol = await repo.findOneByOrFail({ owner: 'carol' });
 statements.length = 0;
 carol.owner = 'carol-2';
 await repo.save(carol);
 console.log('  ... and save() on a loaded, changed entity:');
-for (const s of statements) console.log(`  ${s.slice(0, 140)}`);
+for (const s of statements) console.log(`  ${short(s)}`);
 
 /* F */
 console.log('\n=== F: the same change two ways, save(entity) and update(id, partial) ===');
@@ -125,11 +127,11 @@ statements.length = 0; listenerRuns = 0;
 loaded.owner = 'dave-via-save';
 await repo.save(loaded);
 console.log(`  save(entity):        @BeforeUpdate ran ${listenerRuns}x`);
-for (const q of statements) console.log(`    ${q.slice(0, 110)}`);
+for (const q of statements) console.log(`    ${short(q)}`);
 statements.length = 0; listenerRuns = 0;
 await repo.update(dave.id, { owner: 'dave-via-update' });
 console.log(`  update(id, partial): @BeforeUpdate ran ${listenerRuns}x`);
-for (const q of statements) console.log(`    ${q.slice(0, 110)}`);
+for (const q of statements) console.log(`    ${short(q)}`);
 await repo.query('DROP TABLE IF EXISTS ep12_accounts');
 await ds.destroy();
 
