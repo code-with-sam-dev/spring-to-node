@@ -38,8 +38,8 @@ class ThrownResponseTest {
             System.out.printf("GET %-16s %d  %s%n", path, res.statusCode(), res.body());
         }
 
-        // And the JVM does not care: an exception killed a request thread, not
-        // the application.
+        // And the application carries on: each exception became a response
+        // inside the request pipeline, and nothing else was affected.
         HttpResponse<String> alive = get("/ep07/ok");
         System.out.printf("%nstill answering afterwards: %s%n",
                 alive.statusCode() == 200 ? "yes" : "NO");

@@ -1,5 +1,6 @@
 package dev.codewithsam.springbootapi.ep07;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -23,15 +24,18 @@ import java.util.Map;
  * useGlobalFilters or a UseFilters decorator, which is the same
  * explicit-over-ambient theme as modules in episode 4.
  */
+// On unless a test switches it off, so NoAdviceTest can measure the 500 a
+// domain exception produces when nothing translates it.
+@ConditionalOnProperty(name = "ep07.advice", havingValue = "on", matchIfMissing = true)
 @RestControllerAdvice
 class Ep07Advice {
 
     @ExceptionHandler(Ep07ThrowController.InsufficientFunds.class)
     ResponseEntity<Map<String, Object>> onInsufficientFunds(
             Ep07ThrowController.InsufficientFunds ex) {
-        // 402, for the same reason as the Nest filter: not a server fault, and
-        // something the client can act on.
-        return ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED).body(Map.of(
+        // 409, for the same reason as the Nest filter: not a server fault, but
+        // a conflict with the account's current state, which the client can act on.
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                 "error", "insufficient_funds",
                 "shortfallInMinorUnits", ex.shortfall(),
                 "currency", "USD"));

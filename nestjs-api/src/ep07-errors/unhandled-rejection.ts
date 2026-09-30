@@ -25,6 +25,10 @@ import { fileURLToPath } from 'node:url';
  */
 const PORT = 3991;
 
+async function writeAudit(): Promise<void> {
+  throw new Error('audit store unavailable');
+}
+
 @Controller()
 class BoomController {
   @Get('ok')
@@ -34,9 +38,11 @@ class BoomController {
 
   @Get('detach')
   detach() {
-    // Nobody awaits this. It is exactly the shape of a forgotten await on a
-    // background job, a cache warm, or a fire and forget audit write.
-    void Promise.reject(new Error('the detached promise nobody awaited'));
+    // Nobody awaits this and nobody catches it. The forgotten await on a
+    // background job, a cache warm, or a fire and forget audit write. The
+    // same writeAudit as owned-rejection.ts, so the three outcomes differ by
+    // one line.
+    writeAudit();
     return { started: true };
   }
 }
@@ -74,8 +80,8 @@ if (process.env.ROLE === 'server') {
   } else {
     console.log(`after:   the process EXITED, code ${outcome.code}, signal ${outcome.signal}`);
     console.log(`node     ${process.version}`);
-    console.log('\nasserted: an unhandled rejection took down the whole server,');
-    console.log('and every request it was serving went with it.');
+    console.log('\nasserted: an unhandled rejection exited this process,');
+    console.log('and any work in flight on it ended with it.');
     if (outcome.code === 0) {
       throw new Error('CLAIM FAILED: exited cleanly, which is not the failure being described');
     }

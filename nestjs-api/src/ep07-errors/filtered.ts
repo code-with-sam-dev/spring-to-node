@@ -30,9 +30,11 @@ class InsufficientFunds extends Error {
 class InsufficientFundsFilter implements ExceptionFilter<InsufficientFunds> {
   catch(exception: InsufficientFunds, host: ArgumentsHost) {
     const res = host.switchToHttp().getResponse();
-    // 402 rather than 500: this is not a server fault, it is a decision the
-    // client can act on, which is the whole reason it deserves a filter.
-    res.status(HttpStatus.PAYMENT_REQUIRED).json({
+    // 409 rather than 500: this is not a server fault. The request is well
+    // formed, but the account's current state prevents it, which is a conflict
+    // with current resource state. Not 402, which HTTP still reserves for
+    // future use and so carries no agreed meaning.
+    res.status(HttpStatus.CONFLICT).json({
       error: 'insufficient_funds',
       shortfallInMinorUnits: exception.shortfall,
       currency: exception.currency,
@@ -69,8 +71,8 @@ if (process.env.ROLE === 'server') {
   console.log('with the filter:');
   console.log(`  ${res.status}  ${body}`);
 
-  if (res.status !== 402) {
-    throw new Error(`CLAIM FAILED: expected 402, got ${res.status}`);
+  if (res.status !== 409) {
+    throw new Error(`CLAIM FAILED: expected 409, got ${res.status}`);
   }
   if (!body.includes('250')) {
     throw new Error(`CLAIM FAILED: the shortfall did not reach the client: ${body}`);
