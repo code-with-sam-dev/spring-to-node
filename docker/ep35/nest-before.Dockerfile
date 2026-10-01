@@ -1,3 +1,4 @@
+# EPISODE 35. The course Nest Dockerfile as it was before this episode: kept to measure against.
 # Pinned to the exact LTS the course verified against, not :latest.
 # A course that says "check your version" and then builds on a moving tag is
 # teaching one thing and doing another.
@@ -13,7 +14,5 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci --omit=dev
 COPY --from=build /app/dist ./dist
-# Episode 35: not root. The official Node images ship a "node" user for exactly this.
-USER node
 EXPOSE 3000
 CMD ["node", "dist/main.js"]
