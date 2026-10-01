@@ -1,0 +1,25 @@
+{
+  "name": "ep39-i18n-mail",
+  "private": true,
+  "type": "module",
+  "description": "Episode 39. Its own package because @nestjs/i18n 0.0.1 wants Nest 12.1 and class-validator ^0.14 as peers, and the course app is on Nest 12.0 with class-validator 0.15.",
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@nestjs/common": "^12.1.2",
+    "@nestjs/core": "^12.1.2",
+    "@nestjs/i18n": "^0.0.1",
+    "@nestjs/platform-express": "^12.1.2",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.2",
+    "nodemailer": "^10.0.13",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.3",
+    "@types/nodemailer": "^8.0.2",
+    "typescript": "^6.0.3"
+  }
+}
