@@ -21,8 +21,7 @@ const outcome = (r) => (r.error ? `failed: ${r.error}` : `HTTP ${r.status}`);
 async function run(stack, port, mode, label) {
   const proc = stack === 'nest'
     ? spawn('node', ['dist/ep37-health/main.js', String(port), mode], { cwd: 'nestjs-api' })
-    : spawn(JAVA, ['-jar', JAR, `--server.port=${port}`, '--logging.level.root=OFF', '--spring.main.banner-mode=off',
-        '--management.endpoint.health.probes.enabled=true']);
+    : spawn(JAVA, ['-jar', JAR, `--server.port=${port}`, '--logging.level.root=OFF', '--spring.main.banner-mode=off']);
   const exited = new Promise((r) => proc.on('exit', (code, signal) => r({ code, signal, at: Date.now() })));
   const readyPath = stack === 'nest' ? '/health/ready' : '/actuator/health/readiness';
   for (let i = 0; i < 160; i++) {
@@ -50,7 +49,7 @@ async function run(stack, port, mode, label) {
   console.log(`  ${stack === 'nest' ? 'Nest' : 'Spring'}, ${label}: readiness before ${outcome(before)}; SIGTERM 500 ms into a 3 s payment: the payment ${outcome(s)}${s.body ? ` "${s.body}"` : ''}; during the drain, readiness/new requests ${distinct.join(' then ') || 'none observed'}; exited after ${e.at - t0} ms`);
 }
 
-await run('spring', 18951, null, 'A, Spring Boot defaults (server.shutdown graceful), readiness probe enabled');
+await run('spring', 18951, null, 'A, Spring Boot defaults (server.shutdown graceful, health probes enabled, both by default in 4.1)');
 await run('nest', 13951, 'none', 'A, Nest as created, no shutdown hooks');
 await run('nest', 13952, 'hooks', 'A, app.enableShutdownHooks()');
 await run('nest', 13953, 'drain', 'B, shutdown hooks, readiness 503 on shutdown, Terminus gracefulShutdownTimeoutMs 2000');

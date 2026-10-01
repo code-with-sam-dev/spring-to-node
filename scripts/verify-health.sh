@@ -10,7 +10,7 @@ echo "=== versions ==="
 echo "node              $(node -v)"
 echo "@nestjs/core      $(node -p "require('./nestjs-api/node_modules/@nestjs/core/package.json').version")"
 echo "@nestjs/terminus  $(node -p "require('./nestjs-api/node_modules/@nestjs/terminus/package.json').version")"
-echo "spring boot       4.1.1, server.shutdown default: graceful (spring-boot-web-server metadata)"
+echo "spring boot       4.1.1; defaults read from configuration metadata: server.shutdown graceful, management.endpoint.health.probes.enabled true"
 date -u +"run               %Y-%m-%dT%H:%M:%SZ"
 echo
 
