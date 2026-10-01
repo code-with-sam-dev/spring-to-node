@@ -1,0 +1,8 @@
+# EPISODE 35. What never belongs in the build context. Without this file the context carried the
+# host's node_modules, and COPY . . laid them over the ones npm ci had just installed for Linux.
+node_modules
+dist
+coverage
+.git
+*.log
+.env*
