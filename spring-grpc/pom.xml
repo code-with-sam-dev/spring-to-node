@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<!-- Episode 33. A Spring gRPC server, run as a real process. -->
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>4.1.1</version>
+		<relativePath/>
+	</parent>
+	<groupId>dev.codewithsam</groupId>
+	<artifactId>spring-grpc-probe</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<properties>
+		<java.version>25</java.version>
+		<!-- At the time of recording the Spring gRPC starters stop at 1.0.x; from Boot 4.2 they move into Spring Boot. -->
+		<spring-grpc.version>1.0.3</spring-grpc.version>
+		<grpc.version>1.77.1</grpc.version>
+		<protobuf-java.version>4.33.4</protobuf-java.version>
+	</properties>
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework.grpc</groupId>
+				<artifactId>spring-grpc-dependencies</artifactId>
+				<version>${spring-grpc.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.grpc</groupId>
+			<artifactId>spring-grpc-spring-boot-starter</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.grpc</groupId>
+			<artifactId>grpc-stub</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.grpc</groupId>
+			<artifactId>grpc-protobuf</artifactId>
+		</dependency>
+	</dependencies>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>io.github.ascopes</groupId>
+				<artifactId>protobuf-maven-plugin</artifactId>
+				<version>5.1.11</version>
+				<configuration>
+					<protoc>${protobuf-java.version}</protoc>
+					<plugins>
+						<plugin kind="binary-maven">
+							<groupId>io.grpc</groupId>
+							<artifactId>protoc-gen-grpc-java</artifactId>
+							<version>${grpc.version}</version>
+							<options>@generated=omit</options>
+						</plugin>
+					</plugins>
+				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+</project>

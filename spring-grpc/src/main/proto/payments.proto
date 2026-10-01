@@ -1,0 +1,30 @@
+// EPISODE 33. One contract, served by Spring gRPC and by a NestJS gRPC microservice.
+syntax = "proto3";
+
+package payments;
+
+option java_multiple_files = true;
+option java_package = "dev.codewithsam.grpc.proto";
+
+service Payments {
+  rpc Charge (ChargeRequest) returns (ChargeReply);
+  rpc Slow (ChargeRequest) returns (ChargeReply);
+  rpc SlowChecked (ChargeRequest) returns (ChargeReply);
+  rpc Fail (ChargeRequest) returns (ChargeReply);
+  rpc Stats (ChargeRequest) returns (StatsReply);
+}
+
+message ChargeRequest {
+  string payment_id = 1;
+  int64 amount_cents = 2;
+  bool capture = 3;
+}
+
+message ChargeReply {
+  string seen = 1;
+}
+
+message StatsReply {
+  int32 completed = 1;
+  int32 skipped = 2;
+}
