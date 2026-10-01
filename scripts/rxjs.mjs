@@ -61,6 +61,12 @@ try {
     const { charged } = JSON.parse(await get(port, '/stats'));
     console.log(`  ${who}, C, ${label}, the client left after 500 ms of a 2 s charge: charged afterwards ${charged}`);
   }
+  // C, the Nest fix: stop the Observable when the response closes before it finished.
+  const before = JSON.parse(await get(13601, '/stats')).charged;
+  await abortAfter(13601, '/slow-cancellable', 500);
+  await wait(2500);
+  const after = JSON.parse(await get(13601, '/stats')).charged;
+  console.log(`  Nest, C, takeUntil the response closes unfinished, the client left after 500 ms of a 2 s charge: charged afterwards ${after - before}`);
 } finally {
   for (const p of procs) p.kill('SIGKILL');
 }

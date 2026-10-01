@@ -1,7 +1,8 @@
 import 'reflect-metadata';
-import { Controller, Get, Module, Query } from '@nestjs/common';
+import { Controller, Get, Module, Query, Res } from '@nestjs/common';
+import type { Response } from 'express';
 import { NestFactory } from '@nestjs/core';
-import { count, defer, finalize, map, mergeMap, of, range, timer, type Observable } from 'rxjs';
+import { count, defer, filter, finalize, fromEvent, map, mergeMap, of, range, takeUntil, timer, type Observable } from 'rxjs';
 
 /**
  * EPISODE 34. A stream returned from a handler, mergeMap's concurrency, and a client that leaves.
@@ -36,6 +37,18 @@ class PaymentsController {
   @Get('slow')
   slow(): Observable<string> {
     return timer(2000).pipe(
+      map(() => {
+        charged++;
+        return 'charged';
+      }),
+    );
+  }
+
+  @Get('slow-cancellable')
+  slowCancellable(@Res({ passthrough: true }) res: Response): Observable<string> {
+    const clientLeft = fromEvent(res, 'close').pipe(filter(() => !res.writableFinished));
+    return timer(2000).pipe(
+      takeUntil(clientLeft),
       map(() => {
         charged++;
         return 'charged';
