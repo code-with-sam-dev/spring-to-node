@@ -17,7 +17,7 @@ import org.springframework.util.backoff.FixedBackOff;
 @ConditionalOnProperty(name = "role", havingValue = "interop")
 class InteropListener {
 
-    @KafkaListener(topics = "interop", groupId = "interop-spring")
+    @KafkaListener(topics = "interop", groupId = "${group}")
     void read(ConsumerRecord<String, Object> record) {
         System.out.println("HANDLED spring interop key " + record.key() + " value " + record.value());
     }

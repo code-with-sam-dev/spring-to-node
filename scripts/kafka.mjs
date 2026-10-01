@@ -41,13 +41,14 @@ function consumer(stack, group, postfix, extra = []) {
   const lines = [];
   const proc = stack === 'nest'
     ? spawn('node', ['dist/ep26-kafka/main.js', broker, group, postfix ?? 'default', ...extra], { cwd: 'nestjs-api' })
-    : spawn(JAVA, ['-jar', JAR, `--role=${stack === 'spring-interop' ? 'interop' : 'consumer'}`, `--group=${group}`, `--spring.kafka.bootstrap-servers=${broker}`, '--logging.level.root=OFF', '--spring.main.banner-mode=off',
+    : spawn(JAVA, ['-jar', JAR, `--role=${stack.startsWith('spring-interop') ? 'interop' : 'consumer'}`, `--group=${group}`, `--spring.kafka.bootstrap-servers=${broker}`, '--logging.level.root=OFF', '--spring.main.banner-mode=off',
       '--spring.kafka.consumer.auto-offset-reset=earliest',
-      ...(stack === 'spring-interop' ? ['--spring.kafka.consumer.value-deserializer=org.springframework.kafka.support.serializer.ErrorHandlingDeserializer',
+      ...(stack.startsWith('spring-interop') ? ['--spring.kafka.consumer.value-deserializer=org.springframework.kafka.support.serializer.ErrorHandlingDeserializer',
         '--spring.kafka.consumer.properties.spring.deserializer.value.delegate.class=org.springframework.kafka.support.serializer.JacksonJsonDeserializer',
         '--spring.kafka.consumer.properties.spring.json.trusted.packages=*'] : []),
       '--logging.level.org.apache.kafka.clients.consumer=ERROR', '--logging.level.org.springframework.kafka=ERROR', ...extra]);
   const errors = [];
+  if (process.env.DEBUG) proc.stdout.on('data', (d) => process.stderr.write(`[${stack}] ${d}`));
   proc.stdout.on('data', (d) => {
     const text = d.toString();
     lines.push(...text.split('\n').filter((l) => l.startsWith('HANDLED') || l.startsWith('FAILED')));
@@ -61,7 +62,7 @@ const groups = () => kafka('kafka-consumer-groups.sh --bootstrap-server localhos
 
 try {
   // A: both stacks told to use the group "payments".
-  for (const [label, postfix, springExtra, group] of [['default postfixId', undefined, [], 'payments'], ["postfixId ''", '', [], 'shared'], ["postfixId '', Spring on the RoundRobinAssignor", '', ['--spring.kafka.consumer.properties.partition.assignment.strategy=org.apache.kafka.clients.consumer.RoundRobinAssignor'], 'shared-rr']]) {
+  if (!process.env.ONLY) for (const [label, postfix, springExtra, group] of [['default postfixId', undefined, [], 'payments'], ["postfixId ''", '', [], 'shared'], ["postfixId '', Spring on the RoundRobinAssignor", '', ['--spring.kafka.consumer.properties.partition.assignment.strategy=org.apache.kafka.clients.consumer.RoundRobinAssignor'], 'shared-rr']]) {
     const s = consumer('spring', group, undefined, springExtra);
     const n = consumer('nest', group, postfix);
     await wait(20000);
@@ -80,7 +81,7 @@ try {
   }
 
   // B: a poison message, then five good ones, all with the same key so they share a partition.
-  for (const stack of ['spring', 'nest']) {
+  if (!process.env.ONLY) for (const stack of ['spring', 'nest']) {
     const c = consumer(stack, `poison-${stack}`);
     await wait(15000);
     const sent = Date.now();
@@ -94,7 +95,7 @@ try {
   }
 
   // B2: the poison on one key, good messages on other keys, so on other partitions.
-  {
+  if (!process.env.ONLY) {
     const c = consumer('nest', 'poison-nest-keys');
     await wait(15000);
     produce('payments', [['acct_7', JSON.stringify({ id: 'poison' })], ...Array.from({ length: 6 }, (_, i) => [`acct_${100 + i}`, JSON.stringify({ id: `good_${i + 1}` })])]);
@@ -112,8 +113,10 @@ try {
   execSync(`node dist/ep26-kafka/produce.js ${broker}`, { cwd: 'nestjs-api', stdio: 'ignore' });
   const wire = kafka('kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic interop --from-beginning --max-messages 2 --timeout-ms 15000 --property print.headers=true --property print.key=true');
   for (const line of wire.split('\n').filter((l) => l.includes('pay_'))) console.log(`  Both, C, on the wire: ${line.replace(/\t/g, ' | ')}`);
-  for (const [stack, label] of [['nest', 'Nest @EventPattern'], ['spring-interop', 'Spring @KafkaListener with the typed JSON deserializer']]) {
-    const c = consumer(stack, `interop-${stack}`, undefined, stack === 'nest' ? ['from-beginning'] : []);
+  const contract = ['--spring.kafka.consumer.properties.spring.json.use.type.headers=false',
+    '--spring.kafka.consumer.properties.spring.json.value.default.type=dev.codewithsam.kafka.PaymentsProducer$Payment'];
+  for (const [stack, label, extra] of [['nest', 'Nest @EventPattern', ['from-beginning']], ['spring-interop', 'Spring @KafkaListener with the typed JSON deserializer', []], ['spring-interop-contract', 'Spring, type headers ignored, default type set', contract]]) {
+    const c = consumer(stack, `interop-${stack}`, undefined, extra);
     await wait(20000);
     for (const l of c.lines.filter((x) => x.includes('interop'))) console.log(`  Both, C, ${label} reads: ${l.replace(/^(HANDLED|FAILED) (nest|spring) interop /, (m, a) => (a === 'FAILED' ? 'FAILED ' : ''))}`);
     c.kill();
