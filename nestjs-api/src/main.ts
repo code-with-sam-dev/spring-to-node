@@ -42,8 +42,9 @@ async function bootstrap() {
   for (const signal of ['SIGTERM', 'SIGINT'] as const) {
     process.on(signal, () => {
       // Stop accepting new connections, let in-flight requests finish, then
-      // close. The Spring equivalent is server.shutdown=graceful, which is
-      // also NOT the default there.
+      // close. The Spring equivalent is server.shutdown=graceful, which IS the
+      // default in Spring Boot 4.1 (read from its configuration metadata in
+      // episode 38; it was not the default in older Boot versions).
       server.close(() => void app.close().then(() => process.exit(0)));
     });
   }
