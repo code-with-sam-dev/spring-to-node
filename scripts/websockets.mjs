@@ -144,6 +144,7 @@ try {
       ['spring', 'slow', 'Spring, C, STOMP, the defaults'],
       ['nest', 'ws', 'Nest, C, WsAdapter'],
       ['nest', 'io', 'Nest, C, Socket.IO'],
+      ['nest', 'ws-guard', 'Nest, C, WsAdapter with a 512 KB limit per client'],
     ]) {
       const port = stack === 'spring' ? 18121 : 13121;
       const srv = server(stack, port, mode);
@@ -157,7 +158,7 @@ try {
         close = c.closed;
         tcp.pause();
         c.send('/app/flood', String(COUNT));
-      } else if (mode === 'ws') {
+      } else if (mode === 'ws' || mode === 'ws-guard') {
         const c = await plainWs(port);
         tcp = c.ws._socket;
         close = new Promise((r) => c.ws.on('close', (code, reason) => r({ code, reason: reason.toString() })));
@@ -177,8 +178,8 @@ try {
       const limit = srv.lines.find((x) => / (exceeds|exceeded) the allowed limit /.test(x.l));
       const why = limit ? ` (${/((Buffer size|Send time).*allowed limit \d+)/.exec(limit.l)[1].replace(/ for session '[^']*'/, '')})` : '';
       const verdict = closedLine
-        ? `the server closed the session after ${((closedLine.at - t0) / 1000).toFixed(1)} s: ${closedLine.l.slice(7)}${why}`
-        : `after 15 s the session was still open, the server holding ${Math.round(Number(buffered) / 1048576)} MB for it`;
+        ? `the server closed the session after ${closedLine.at - t0} ms: ${closedLine.l.slice(7)}${why}`
+        : `after 15 s the session was still open, about ${Math.round(Number(buffered) / 1048576)} MB queued for that socket`;
       console.log(`  ${label}, a client that stops reading, ${COUNT} messages of 1 KB: ${verdict}`);
       tcp.resume();
       await Promise.race([close, wait(500)]);
