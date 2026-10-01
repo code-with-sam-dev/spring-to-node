@@ -54,10 +54,13 @@ class EventsProbeTest {
         System.out.println("  Spring, C, publish inside a transaction that rolled back: payments in the database " + rows
             + ", @EventListener receipts " + listener.receiptsFor("pay_rolled_back")
             + ", @TransactionalEventListener receipts " + listener.afterCommitFor("pay_rolled_back"));
+        listener.order().clear();
         tx.executeWithoutResult(status -> {
             jdbc.update("INSERT INTO payments (id) VALUES ('pay_committed')");
             events.publishEvent(new PaymentEvents.Created("pay_committed"));
+            listener.order().add("the publisher continued, then the transaction committed");
         });
+        System.out.println("  Spring, C, the order on commit: " + String.join("; ", listener.order()));
         System.out.println("  Spring, C, publish inside a transaction that committed: @TransactionalEventListener receipts "
             + listener.afterCommitFor("pay_committed"));
     }

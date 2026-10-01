@@ -15,6 +15,8 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const started = Date.now();
 const at = () => `${Date.now() - started} ms`;
 let errorsLogged = 0;
+const marks: string[] = [];
+const order: string[] = [];
 
 const logger: LoggerService = {
   log: () => undefined,
@@ -54,6 +56,29 @@ class ReceiptListener {
   @OnEvent('payment.created')
   receipt(id: string) {
     this.receipts.push(id);
+    order.push(`@OnEvent ran for ${id}`);
+  }
+
+  @OnEvent('matrix.default')
+  async matrixDefault(fail: boolean) {
+    await this.matrix(fail);
+  }
+
+  @OnEvent('matrix.unsuppressed', { suppressErrors: false })
+  async matrixUnsuppressed(fail: boolean) {
+    await this.matrix(fail);
+  }
+
+  @OnEvent('matrix.async', { async: true })
+  matrixAsyncOption() {
+    marks.push(`listener ran ${at()}`);
+  }
+
+  private async matrix(fail: boolean) {
+    marks.push(`listener started ${at()}`);
+    await sleep(500);
+    marks.push(`listener finished ${at()}`);
+    if (fail) throw new Error('mail server busy');
   }
 }
 
@@ -96,6 +121,27 @@ void (async () => {
     console.log(`  Nest, B, emitAsync() resolved after ${Date.now() - t} ms`);
   }
 
+  if (scenario === 'matrix') {
+    for (const [call, event, fail] of [['emitAsync', 'matrix.default', true], ['emitAsync', 'matrix.unsuppressed', true]] as const) {
+      marks.length = 0;
+      errorsLogged = 0;
+      const t = Date.now();
+      let outcome = 'resolved';
+      try {
+        await events.emitAsync(event, fail);
+      } catch (e) {
+        outcome = `rejected: ${(e as Error).message}`;
+      }
+      console.log(`  Nest, B, ${call} with ${event === 'matrix.default' ? 'suppressErrors default' : 'suppressErrors false'}, a 500 ms listener that throws: ${outcome} after ${Date.now() - t} ms, errors logged ${errorsLogged}`);
+    }
+    marks.length = 0;
+    marks.push(`before emit ${at()}`);
+    events.emit('matrix.async');
+    marks.push(`after emit ${at()}`);
+    await sleep(50);
+    console.log(`  Nest, B, @OnEvent({ async: true }), a listener with no await in it: ${marks.map((m) => m.replace(/ \d+ ms$/, '')).join(', then ')}`);
+  }
+
   if (scenario === 'transaction') {
     const db = new Client({ connectionString: databaseUrl });
     await db.connect();
@@ -121,6 +167,14 @@ void (async () => {
     await db.query('COMMIT');
     committed = true;
     if (committed) events.emit('payment.created', 'pay_committed');
+    order.length = 0;
+    await db.query('BEGIN');
+    await db.query("INSERT INTO ep29_payments (id) VALUES ('pay_inside')");
+    events.emit('payment.created', 'pay_inside');
+    order.push('the publisher continued');
+    await db.query('COMMIT');
+    order.push('the transaction committed');
+    console.log(`  Nest, C, emit inside a transaction that committed, the order: ${order.join('; ')}`);
     console.log(`  Nest, C, emit only after COMMIT: rolled back, receipts sent ${listener.receipts.filter((r) => r === 'pay_rolled_back_again').length}; committed, receipts sent ${listener.receipts.filter((r) => r === 'pay_committed').length}`);
     await db.end();
   }
